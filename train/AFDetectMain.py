@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/root/AF")
+
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
