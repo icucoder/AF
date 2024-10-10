@@ -3,6 +3,9 @@ import torch
 import torch.nn as nn
 from torch import optim
 from tqdm import tqdm
+from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
+import torch.nn.functional as F
 
 from utils import DataUtils, PltUtils
 
@@ -138,20 +141,44 @@ def train_Encoder(*, model, ecg, bcg, label, lr=0.0001, epoch=2):
     LossRecord = []
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1.0)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
+    dataset = TensorDataset(ecg, bcg, label)
+    data_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=True)
     for _ in tqdm(range(epoch)):
         optimizer.zero_grad()
 
-        ecg_feature, bcg_feature, ecg_ans, bcg_ans, ecg_restruct, bcg_restruct = model(ecg, bcg)
+        # ecg_feature, bcg_feature, ecg_ans, bcg_ans, ecg_restruct, bcg_restruct = model(ecg, bcg)
         # loss1 = criterion(ecg_feature, bcg_feature)
-        loss1 = criterion(ecg_feature[1:]-ecg_feature[:-1], bcg_feature[1:]-bcg_feature[:-1]) # 修改为BCG、ECG内部两两之间向量方向上的对齐
-        loss2 = criterion(ecg_restruct, ecg) # 重构
-        loss3 = criterion(bcg_restruct, bcg) # 重构
-        loss4 = crossloss(ecg_ans.squeeze(1), label)  # AF检测
+        loss1 = 0
+        loss2 = 0
+        loss3 = 0
+        loss4 = 0
+        for __, data_sample in enumerate(data_loader, 1):
+            ecg_sample, bcg_sample, label_sample = data_sample # 16 1 2048  16 1 2048  16 2
+            # 16 1 256  16 1 2  16 1 2048
+            ecg_feature, bcg_feature, ecg_ans, bcg_ans, ecg_restruct, bcg_restruct = model(ecg_sample, bcg_sample)
+            # print(label_sample.shape, ecg_feature.shape, bcg_feature.shape, ecg_ans.shape, bcg_ans.shape, ecg_restruct.shape, bcg_restruct.shape)
+            # 自对齐
+            metric = torch.ones(label_sample.shape[0], label_sample.shape[0]) - torch.mm(label_sample, label_sample.t()) # 16*16  0表示同类  1表示异类（同类指均为AF或NAF）
+            ecg_norm_feature = F.normalize(ecg_feature.squeeze(1))
+            bcg_norm_feature = F.normalize(bcg_feature.squeeze(1))
+            loss1 = loss1 + criterion(torch.mm(ecg_norm_feature, ecg_norm_feature.t()), metric)
+            loss1 = loss1 + criterion(torch.mm(ecg_norm_feature, ecg_norm_feature.t()), torch.mm(bcg_norm_feature, bcg_norm_feature.t()))
+            # 互对齐
+
+            # 重构
+            loss2 = loss2 + criterion(ecg_restruct, ecg_sample)
+            loss3 = loss3 + criterion(bcg_restruct, bcg_sample)
+            # AF检测
+            loss4 = loss4 + crossloss(ecg_ans.squeeze(1), label_sample)
+        # loss1 = criterion(ecg_feature[1:]-ecg_feature[:-1], bcg_feature[1:]-bcg_feature[:-1]) # 修改为BCG、ECG内部两两之间向量方向上的对齐
+        # loss2 = criterion(ecg_restruct, ecg) # 重构
+        # loss3 = criterion(bcg_restruct, bcg) # 重构
+        # loss4 = crossloss(ecg_ans.squeeze(1), label)  # AF检测
         # loss5 = crossloss(bcg_ans.squeeze(1), label)  # AF检测
-        # print(loss1, loss2, loss3, loss4)
+        print(loss1, loss2, loss3, loss4)
         # loss = loss1 + loss2 + loss3 + loss4# + loss5
-        loss = loss1 + loss2 + loss3
-        print(loss1, loss2, loss3)
+        loss = loss1 + loss2 + loss3 + loss4
+        print(loss1, loss2, loss3, loss4)
 
         loss.backward()
         LossRecord.append(loss.item())
@@ -264,3 +291,7 @@ def run_Encoder():
 
 if __name__ == '__main__':
     run_Encoder()
+
+
+# 自对齐：把每个人内部的NAF/AF特征排列成线性
+# 互对齐：将所有NAF聚集、将所有AF聚集

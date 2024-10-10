@@ -143,3 +143,30 @@ def get_DataSet():
 def layernorm(data):
     norm = nn.LayerNorm(data.shape[-1]).to(device=data.device)
     return norm(data)
+
+
+def continuity_loss(vector_list):  # person num length
+    ans = 0
+    for vector in vector_list:
+        diff = vector[:, 1:, :] - vector[:, :-1, :]
+        diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
+        ans += torch.sum(diff * diff)
+    return ans
+
+
+def CLIP_metric(naf_vector, af_vector):
+    diff = af_vector.unsqueeze(1) - naf_vector.unsqueeze(0)
+    diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
+    diff = F.normalize(diff)
+    return diff
+
+def CLIP_loss(naf_vector, af_vector):  # nums length   后面减去前面
+    diff = CLIP_metric(naf_vector, af_vector)
+    ans = torch.mm(diff, diff.t())
+    return torch.sum(ans)
+
+# if __name__ == '__main__':
+#     data1 = torch.ones(2,5)
+#     data2 = torch.zeros(3,5)
+#     ans = CLIP_loss(data2, data1)
+#     print(ans)

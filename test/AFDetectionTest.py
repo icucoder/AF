@@ -87,25 +87,20 @@ def ttest_Encoder():
     print("ECG分类结果", ecg_ans)
     print("BCG分类结果", bcg_ans)
 
-    ecg_feature = DataUtils.get_PCA_feature(ecg_feature.squeeze(1).detach().numpy(), 3)
-    bcg_feature = DataUtils.get_PCA_feature(bcg_feature.squeeze(1).detach().numpy(), 3)
+    ecg_pca_feature = DataUtils.get_PCA_feature(ecg_feature.squeeze(1).detach().numpy(), 3)
+    bcg_pca_feature = DataUtils.get_PCA_feature(bcg_feature.squeeze(1).detach().numpy(), 3)
 
     PltUtils.plot_3D_PCA_one_Figure(
         [
-            ecg_feature[:ecg_feature.shape[0] // persons * 5],  # 有病的ECG
-            ecg_feature[ecg_feature.shape[0] // persons * 5:],  # 无病的ECG
-            bcg_feature[:bcg_feature.shape[0] // persons * 5],  # 有病的BCG
-            bcg_feature[bcg_feature.shape[0] // persons * 5:],  # 无病的BCG
+            ecg_pca_feature[:ecg_pca_feature.shape[0] // persons * 5],  # 有病的ECG
+            ecg_pca_feature[ecg_pca_feature.shape[0] // persons * 5:],  # 无病的ECG
+            bcg_pca_feature[:bcg_pca_feature.shape[0] // persons * 5],  # 有病的BCG
+            bcg_pca_feature[bcg_pca_feature.shape[0] // persons * 5:],  # 无病的BCG
         ]
     )
 
     # 绘制特征是否对齐
-    PltUtils.plot_3D_PCA_one_Figure(
-        [
-            ecg_feature,
-            bcg_feature,
-        ]
-    )
+    PltUtils.plot_bcg_ecg_feature(ecg_feature, bcg_feature)
 
     # 观察重构效果
     PltUtils.plot_origin_restruct_data(ECG_vector, ecg_restruct, BCG_vector, bcg_restruct)

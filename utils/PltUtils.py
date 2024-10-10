@@ -37,6 +37,17 @@ def plot_all_data(data):
     plt.show()
 
 
+def plot_bcg_ecg_feature(ecg_feature, bcg_feature):
+    ecg_diff = ecg_feature[1:] - ecg_feature[:-1]
+    bcg_diff = bcg_feature[1:] - bcg_feature[:-1]
+    num = min(ecg_diff.shape[0], bcg_diff.shape[0])
+    for i in range(num):
+        plt.title("ecg_feature and bcg_feature")
+        plt.plot(ecg_feature[i][0].detach().numpy())
+        plt.plot(bcg_feature[i][0].detach().numpy())
+        plt.show()
+
+
 def plot_origin_restruct_data(ecg_origin, ecg_restruct, bcg_origin, bcg_restruct):
     num = min(ecg_origin.shape[0], ecg_restruct.shape[0])
     for i in range(num):
