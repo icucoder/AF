@@ -152,6 +152,7 @@ def train_Encoder(*, model, ecg, bcg, label, lr=0.0001, epoch=2):
         loss2 = 0
         loss3 = 0
         loss4 = 0
+        # 这里为啥要索引从1开始，这个代码没多大意义吧？
         for __, data_sample in enumerate(data_loader, 1):
             ecg_sample, bcg_sample, label_sample = data_sample # 16 1 2048  16 1 2048  16 2
             # 16 1 256  16 1 2  16 1 2048

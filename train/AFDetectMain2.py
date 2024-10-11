@@ -174,17 +174,20 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.0001, 
         loss1 = 0
         loss2 = 0
         loss3 = 0
+        # 1.？不需要从1开始索引开始。
+        # 2.代码结构修改，是否真的需要遍历全部？（随机找两个进行匹配计算？）
         for __, af_data_sample in enumerate(data_loader1, 1):
             for __, naf_data_sample in enumerate(data_loader2, 1):
                 # 16 1 2048  16 1 2048  16 2
                 ecg_af_sample, bcg_af_sample = af_data_sample
                 ecg_naf_sample, bcg_naf_sample = naf_data_sample
                 # 16 1 256   16 1 256   16 1 256   16 1 256   16 1 2048
+                # 3.下面这一行可以放在循环外。
                 ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(ecg_af_sample, bcg_af_sample)
                 ecg_naf_feature, bcg_naf_feature, ecg_naf_mlp, bcg_naf_mlp, ecg_naf_restruct, bcg_naf_restruct = model(ecg_naf_sample, bcg_naf_sample)
-                # 自对齐（连续性）
+                # 自对齐（连续性）+         # 4. 直接torch.diff()相减，然后torch.sum(val * val)
                 loss1 += DataUtils.continuity_loss([ecg_af_mlp, bcg_af_mlp, ecg_naf_mlp, bcg_naf_mlp])
-                # 互对齐
+                # 互对齐 5.直接torch.sum(torch.norm(value,dim=-1)) 6.不能相等做损失，应该使用余弦相似度（考虑向量的长度）
                 loss1 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp) + criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
 
                 # 重构

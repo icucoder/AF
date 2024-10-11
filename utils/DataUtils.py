@@ -165,6 +165,8 @@ def CLIP_metric(naf_vector, af_vector): # p n length
 
 def CLIP_loss(naf_vector, af_vector):  # p n length   后面减去前面
     diff = CLIP_metric(naf_vector, af_vector)
+    # 直接torch.sum(torch.norm(value,dim=-1))
+    # diff (p n) length
     ans = torch.mm(diff, diff.t())
     return torch.sum(ans)
 
