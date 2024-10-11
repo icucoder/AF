@@ -160,8 +160,8 @@ def CLIP_metric(naf_vector, af_vector):
     diff = F.normalize(diff)
     return diff
 
-def CLIP_loss(naf_vector, af_vector):  # nums length   后面减去前面
-    diff = CLIP_metric(naf_vector, af_vector)
+def CLIP_loss(naf_vector, af_vector):  # nums 1 length   后面减去前面
+    diff = CLIP_metric(naf_vector.squeeze(1), af_vector.squeeze(1))
     ans = torch.mm(diff, diff.t())
     return torch.sum(ans)
 

@@ -164,29 +164,32 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.0001, 
     LossRecord = []
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1.0)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
-    dataset = TensorDataset(ecg_af, ecg_naf, bcg_af, bcg_naf, label)
-    data_loader = DataLoader(dataset=dataset, batch_size=8, shuffle=True)
+    dataset1 = TensorDataset(ecg_af, bcg_af)
+    dataset2 = TensorDataset(ecg_naf, bcg_naf)
+    data_loader1 = DataLoader(dataset=dataset1, batch_size=8, shuffle=True)
+    data_loader2 = DataLoader(dataset=dataset2, batch_size=8, shuffle=True)
     for _ in tqdm(range(epoch)):
         optimizer.zero_grad()
 
         loss1 = 0
         loss2 = 0
         loss3 = 0
-        loss4 = 0
-        for __, data_sample in enumerate(data_loader, 1):
-            # 16 1 2048  16 1 2048  16 2
-            ecg_af_sample, ecg_naf_sample, bcg_af_sample, bcg_naf_sample, label_sample = data_sample
-            # 16 1 256   16 1 256   16 1 256   16 1 256   16 1 2048
-            ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(ecg_af_sample, bcg_af_sample)
-            ecg_naf_feature, bcg_naf_feature, ecg_naf_mlp, bcg_naf_mlp, ecg_naf_restruct, bcg_naf_restruct = model(ecg_naf_sample, bcg_naf_sample)
-            # 自对齐（连续性）
-            loss1 += DataUtils.continuity_loss([ecg_af_mlp, bcg_af_mlp, ecg_naf_mlp, bcg_naf_mlp])
-            # 互对齐
-            loss1 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp) + criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
+        for __, af_data_sample in enumerate(data_loader1, 1):
+            for __, naf_data_sample in enumerate(data_loader2, 1):
+                # 16 1 2048  16 1 2048  16 2
+                ecg_af_sample, bcg_af_sample = af_data_sample
+                ecg_naf_sample, bcg_naf_sample = naf_data_sample
+                # 16 1 256   16 1 256   16 1 256   16 1 256   16 1 2048
+                ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(ecg_af_sample, bcg_af_sample)
+                ecg_naf_feature, bcg_naf_feature, ecg_naf_mlp, bcg_naf_mlp, ecg_naf_restruct, bcg_naf_restruct = model(ecg_naf_sample, bcg_naf_sample)
+                # 自对齐（连续性）
+                loss1 += DataUtils.continuity_loss([ecg_af_mlp, bcg_af_mlp, ecg_naf_mlp, bcg_naf_mlp])
+                # 互对齐
+                loss1 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp) + criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
 
-            # 重构
-            loss2 = loss2 + criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
-            loss3 = loss3 + criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
+                # 重构
+                loss2 = loss2 + criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
+                loss3 = loss3 + criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
 
         # loss1 = criterion(ecg_feature[1:]-ecg_feature[:-1], bcg_feature[1:]-bcg_feature[:-1]) # 修改为BCG、ECG内部两两之间向量方向上的对齐
         # loss2 = criterion(ecg_restruct, ecg) # 重构
