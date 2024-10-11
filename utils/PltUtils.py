@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from utils import DataUtils
 from matplotlib.colors import LinearSegmentedColormap
 
 
@@ -27,6 +28,23 @@ def plot_3D_PCA_one_Figure(data_list):
             ax = fig.add_subplot(1, len(data_list) // 2, i // 2 + 1, projection='3d')
         # ax.plot(data[:, 0], data[:, 1], data[:, 2])
         ax.scatter(xs=data[:, 0], ys=data[:, 1], zs=data[:, 2], marker='*', c=colors[i % 2])
+    plt.show()
+    return
+
+
+def plot_2D_PCA_one_Figure(data_list):
+    fig = plt.figure()
+    colors = ['red', 'blue']
+    markers = ['*', 'o']
+    plt.title("red-AF / *-ECG")
+    for i in range(len(data_list)):
+        data = data_list[i]
+        data = data.reshape(data.shape[0] * data.shape[1], data.shape[-1])
+        data = DataUtils.get_PCA_feature(data.detach().numpy(), 3)
+        if i % 2 == 0:
+            ax = fig.add_subplot(1, len(data_list) // 2, i // 2 + 1, projection='3d')
+        # ax.plot(data[:, 0], data[:, 1], data[:, 2])
+        ax.scatter(xs=data[:, 0], ys=data[:, 1], zs=data[:, 2], marker=markers[i // 2], c=colors[i % 2])
     plt.show()
     return
 
