@@ -67,11 +67,18 @@ class ECG_Encoder(nn.Module):
 class UpSampleResNet(nn.Module):
     def __init__(self, in_channels, out_channels, N):  # N表示上采样倍数
         super().__init__()
-        self.unconv1 = nn.Sequential(
-            nn.ConvTranspose1d(in_channels, out_channels, 2 * N, stride=N, padding=N // 2),
-            nn.BatchNorm1d(out_channels),
-            # nn.ReLU()
-        )
+        if N == 1:
+            self.unconv1 = nn.Sequential(
+                nn.ConvTranspose1d(in_channels, out_channels, 3, stride=1, padding=1),
+                nn.BatchNorm1d(out_channels),
+                # nn.ReLU()
+            )
+        else:
+            self.unconv1 = nn.Sequential(
+                nn.ConvTranspose1d(in_channels, out_channels, 2 * N, stride=N, padding=N // 2),
+                nn.BatchNorm1d(out_channels),
+                # nn.ReLU()
+            )
         self.unconv2 = nn.Sequential(
             nn.Conv1d(out_channels, out_channels, 1, padding='same', padding_mode='reflect'),
             nn.BatchNorm1d(out_channels),
@@ -88,7 +95,7 @@ class Decoder(nn.Module):
         super().__init__()
         self.unconv1 = UpSampleResNet(in_channels=1, out_channels=64, N=2)
         self.unconv2 = UpSampleResNet(in_channels=64, out_channels=32, N=2)
-        self.unconv3 = UpSampleResNet(in_channels=32, out_channels=1, N=2)
+        self.unconv3 = UpSampleResNet(in_channels=32, out_channels=1, N=1)
 
     def forward(self, input):
         output = self.unconv1(input)
@@ -157,13 +164,13 @@ class MyNet(nn.Module):
         )
 
 
-def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.0001, epoch=2):
+def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.001, epoch=2):
     criterion = nn.MSELoss()
     # crossloss = nn.CrossEntropyLoss()
     crossloss = nn.BCELoss()
     LossRecord = []
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1.0)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.7)
     dataset1 = TensorDataset(ecg_af, bcg_af)
     dataset2 = TensorDataset(ecg_naf, bcg_naf)
     data_loader1 = DataLoader(dataset=dataset1, batch_size=8, shuffle=True)
@@ -181,12 +188,14 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.0001, 
                 ecg_naf_sample, bcg_naf_sample = naf_data_sample
                 # 16 1 256   16 1 256   16 1 256   16 1 256   16 1 2048
                 ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(ecg_af_sample, bcg_af_sample)
+                print(ecg_af_feature.shape, bcg_af_feature.shape, ecg_af_mlp.shape, bcg_af_mlp.shape, ecg_af_restruct.shape, bcg_af_restruct.shape)
                 ecg_naf_feature, bcg_naf_feature, ecg_naf_mlp, bcg_naf_mlp, ecg_naf_restruct, bcg_naf_restruct = model(ecg_naf_sample, bcg_naf_sample)
                 # 自对齐（连续性）
                 loss1 += DataUtils.continuity_loss([ecg_af_mlp, bcg_af_mlp, ecg_naf_mlp, bcg_naf_mlp])
                 # 互对齐
                 loss1 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp) + criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
-
+                # 按时间对齐提取到的特征
+                loss1 += criterion(ecg_af_mlp, bcg_af_mlp) + criterion(ecg_naf_mlp, bcg_naf_mlp)
                 # 重构
                 loss2 = loss2 + criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss3 = loss3 + criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
@@ -209,7 +218,7 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.0001, 
     return model.cpu()
 
 
-def get_AF_DataSet():
+def get_AF_DataSet(slidingWindowSize):
     ECGPathList = [
         '004.chengjinqing.20180319.171534.37.ecg.af.csv',
         '007.songjinming.20180320.174932.37.ecg.af.csv',
@@ -232,7 +241,7 @@ def get_AF_DataSet():
 
     begin = 1000
     read_length = 10240
-    slidingWindowSize = 2048
+    # slidingWindowSize = 1024
     ECG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     BCG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     for i in range(len(ECGPathList)):
@@ -254,7 +263,7 @@ def get_AF_DataSet():
     return ECG_vector, BCG_vector, len(ECGPathList), label
 
 
-def get_NAF_DataSet():
+def get_NAF_DataSet(slidingWindowSize):
     ECGPathList = [
         '016.lijinliang.20180323.164358.36.ecg.na.csv',
         '017.liaoyinghua.20180323.162433.37.ecg.na.csv',
@@ -275,7 +284,7 @@ def get_NAF_DataSet():
 
     begin = 1000
     read_length = 10240
-    slidingWindowSize = 2048
+    # slidingWindowSize = 2048
     ECG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     BCG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     for i in range(len(ECGPathList)):
@@ -298,8 +307,9 @@ def get_NAF_DataSet():
 
 
 def run_Encoder():
-    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet()
-    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet()
+    slidingWindowSize = 1024
+    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(slidingWindowSize)
+    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(slidingWindowSize)
 
     ECG_vector = torch.cat([ECG_AF_vector, ECG_NAF_vector], dim=0)
     BCG_vector = torch.cat([BCG_AF_vector, BCG_NAF_vector], dim=0)
@@ -316,8 +326,8 @@ def run_Encoder():
         bcg_af=BCG_AF_vector.data.cuda(),
         bcg_naf=BCG_NAF_vector.data.cuda(),
         label=label.cuda(),
-        lr=0.0003,
-        epoch=1000
+        lr=0.003,
+        epoch=2000
     )
 
     # ecg_feature, bcg_feature, ecg_ans, bcg_ans, ecg_restruct, bcg_restruct = model(ECG_vector, BCG_vector)

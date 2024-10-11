@@ -6,7 +6,7 @@ from utils import DataUtils, PltUtils
 
 torch.manual_seed(10)
 
-def get_AF_DataSet():
+def get_AF_DataSet(slidingWindowSize):
     ECGPathList = [
         '004.chengjinqing.20180319.171534.37.ecg.af.csv',
         '007.songjinming.20180320.174932.37.ecg.af.csv',
@@ -29,7 +29,7 @@ def get_AF_DataSet():
 
     begin = 1000
     read_length = 10240
-    slidingWindowSize = 2048
+    # slidingWindowSize = 2048
     ECG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     BCG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     for i in range(len(ECGPathList)):
@@ -51,7 +51,7 @@ def get_AF_DataSet():
     return ECG_vector, BCG_vector, len(ECGPathList), label
 
 
-def get_NAF_DataSet():
+def get_NAF_DataSet(slidingWindowSize):
     ECGPathList = [
         '016.lijinliang.20180323.164358.36.ecg.na.csv',
         '017.liaoyinghua.20180323.162433.37.ecg.na.csv',
@@ -72,7 +72,7 @@ def get_NAF_DataSet():
 
     begin = 1000
     read_length = 10240
-    slidingWindowSize = 2048
+    # slidingWindowSize = 2048
     ECG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     BCG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
     for i in range(len(ECGPathList)):
@@ -95,8 +95,9 @@ def get_NAF_DataSet():
 
 
 def run_Encoder():
-    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet()
-    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet()
+    slidingWindowSize = 1024
+    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(slidingWindowSize)
+    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(slidingWindowSize)
 
     ECG_vector = torch.cat([ECG_AF_vector, ECG_NAF_vector], dim=0)
     BCG_vector = torch.cat([BCG_AF_vector, BCG_NAF_vector], dim=0)
