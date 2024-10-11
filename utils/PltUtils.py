@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+from sklearn.manifold import TSNE
 from utils import DataUtils
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -32,19 +34,60 @@ def plot_3D_PCA_one_Figure(data_list):
     return
 
 
-def plot_2D_PCA_one_Figure(data_list):
+# def plot_2D_PCA_one_Figure(data_list):
+#     fig = plt.figure()
+#     colors = ['red', 'blue']
+#     markers = ['*', 'o']
+#     plt.title("red-AF / *-ECG")
+#     for i in range(len(data_list)):
+#         data = data_list[i]
+#         data = data.reshape(data.shape[0] * data.shape[1], data.shape[-1])
+#         data = DataUtils.get_PCA_feature(data.detach().numpy(), 3)
+#         if i % 2 == 0:
+#             ax = fig.add_subplot(1, len(data_list) // 2, i // 2 + 1, projection='3d')
+#         # ax.plot(data[:, 0], data[:, 1], data[:, 2])
+#         ax.scatter(xs=data[:, 0], ys=data[:, 1], zs=data[:, 2], marker=markers[i // 2], c=colors[i % 2])
+#     plt.show()
+#     return
+
+
+def plot_2D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
+    length_list = [0]
+    processed_data_list = []  # 存放的数据形状shape：(P * N), length
+    for data in data_list:
+        P, N, data_length = data.shape
+        length_list.append(length_list[-1] + P * N)
+        data = data.reshape(P * N, data_length)
+        processed_data_list.append(data)
+    all_data = torch.cat(processed_data_list, dim=0)
+
+    # 应用 t-SNE 降维到二维空间
+    tsne = TSNE(n_components=2, random_state=42)
+    embedded_data = tsne.fit_transform(all_data.detach().numpy())
+
+    # 可视化
     fig = plt.figure()
-    colors = ['red', 'blue']
-    markers = ['*', 'o']
-    plt.title("red-AF / *-ECG")
+    # ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111)
+
+    # 定义颜色
+    colors = ['r', 'g', 'b', 'y']
+    label_names = ['AF_ECG', 'NAF_ECG', 'AF_BCG', 'NAF_BCG']
+
+    # 绘制每个类别的数据
     for i in range(len(data_list)):
-        data = data_list[i]
-        data = data.reshape(data.shape[0] * data.shape[1], data.shape[-1])
-        data = DataUtils.get_PCA_feature(data.detach().numpy(), 3)
-        if i % 2 == 0:
-            ax = fig.add_subplot(1, len(data_list) // 2, i // 2 + 1, projection='3d')
-        # ax.plot(data[:, 0], data[:, 1], data[:, 2])
-        ax.scatter(xs=data[:, 0], ys=data[:, 1], zs=data[:, 2], marker=markers[i // 2], c=colors[i % 2])
+        ax.scatter(
+            embedded_data[length_list[i]:length_list[i + 1], 0],
+            embedded_data[length_list[i]:length_list[i + 1], 1],
+            # embedded_data[length_list[i]:length_list[i + 1], 2],
+            c=colors[i], label=label_names[i]
+        )
+
+    ax.set_title('t-SNE visualization of different classes')
+    # ax.set_xlabel('Dimension 1')
+    # ax.set_ylabel('Dimension 2')
+    # ax.set_zlabel('Dimension 3')
+    plt.legend()
     plt.show()
     return
 

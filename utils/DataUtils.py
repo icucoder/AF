@@ -154,25 +154,23 @@ def continuity_loss(vector_list):  # person num length
     return ans
 
 
-def CLIP_metric(naf_vector, af_vector): # p n length
+def CLIP_metric(naf_vector, af_vector):  # p n length
     naf_vector = naf_vector.reshape(naf_vector.shape[0] * naf_vector.shape[1], naf_vector.shape[-1])
     af_vector = af_vector.reshape(af_vector.shape[0] * af_vector.shape[1], af_vector.shape[-1])
     diff = af_vector.unsqueeze(1) - naf_vector.unsqueeze(0)
     diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
-    diff = F.normalize(diff)
+    diff = F.normalize(diff, dim=-1) #
     return diff
 
 
 def CLIP_loss(naf_vector, af_vector):  # p n length   后面减去前面
     diff = CLIP_metric(naf_vector, af_vector)
-    # 直接torch.sum(torch.norm(value,dim=-1))
-    # diff (p n) length
-    ans = torch.mm(diff, diff.t())
+    ans = 1 - torch.mm(diff, diff.t()) # 两两向量之间的余弦相似度
     return torch.sum(ans)
 
 
-# if __name__ == '__main__':
-#     data1 = torch.ones(2, 3, 5)
-    # data2 = torch.zeros(3, 3, 5)
-    # ans = CLIP_loss(data2, data1)
-    # print(ans)
+if __name__ == '__main__':
+    data1 = torch.ones(2, 3, 5)
+    data2 = torch.zeros(3, 3, 5)
+    ans = CLIP_loss(data2, data1)
+    print(ans)
