@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 from utils import DataUtils
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -62,32 +63,37 @@ def plot_2D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
     all_data = torch.cat(processed_data_list, dim=0)
 
     # 应用 t-SNE 降维到二维空间
-    tsne = TSNE(n_components=2, random_state=42)
-    embedded_data = tsne.fit_transform(all_data.detach().numpy())
+    # tsne = TSNE(n_components=2, random_state=42)
+    # embedded_data = tsne.fit_transform(all_data.detach().numpy())
+    # 应用 PCA 降维到二维空间
+    pca = PCA(n_components=2, random_state=42)
+    embedded_data = pca.fit_transform(all_data.detach().numpy())
 
     # 可视化
     fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
-    ax = fig.add_subplot(111)
 
     # 定义颜色
     colors = ['r', 'g', 'b', 'y']
     label_names = ['AF_ECG', 'NAF_ECG', 'AF_BCG', 'NAF_BCG']
-
+    fig_list = [121, 122]
     # 绘制每个类别的数据
     for i in range(len(data_list)):
+        if i % 2 == 0:
+            ax = fig.add_subplot(fig_list[i // 2])
+        # ax = fig.add_subplot(111)
         ax.scatter(
             embedded_data[length_list[i]:length_list[i + 1], 0],
             embedded_data[length_list[i]:length_list[i + 1], 1],
             # embedded_data[length_list[i]:length_list[i + 1], 2],
             c=colors[i], label=label_names[i]
         )
+        plt.legend()
 
-    ax.set_title('t-SNE visualization of different classes')
+    plt.title('t-SNE visualization of different classes')
     # ax.set_xlabel('Dimension 1')
     # ax.set_ylabel('Dimension 2')
     # ax.set_zlabel('Dimension 3')
-    plt.legend()
     plt.show()
     return
 

@@ -6,6 +6,7 @@ from scipy.signal import savgol_filter
 from sklearn.decomposition import PCA
 from torch.nn import functional as F
 import torch.nn as nn
+from scipy.interpolate import interp1d
 
 
 def read_numpy_from_CSV_all_data(path):
@@ -25,13 +26,22 @@ def read_numpy_from_CSV_data(path, begin, length, column=1):
 
 
 # 同上
-def read_torch_from_CSV_data(path, begin, length, column=1, isKansas=False):
-    data = read_numpy_from_CSV_data(path, begin, length, column)
-    if (isKansas):
-        target_length = data.shape[0] // 8
-        index = np.arange(target_length) * 8
-        data = data[index]
+# f: 数据采样频率，读出数据后会统一转化为125Hz数据，输出的length统一按照125HZ计算
+def read_torch_from_CSV_data(path, begin, length, f=125.0, column=1):
+    data = read_numpy_from_CSV_data(path, begin, int(length * f / 125.0), column) # shape: (length * f / 125.0) * 1
+    data = bilinear_interpolate_1d(data, length) # 将读取的数据转化为125Hz
     return torch.from_numpy(data)
+
+# 将形状为 M*1 的数据进行双线性插值到 N*1 的数据
+def bilinear_interpolate_1d(data, N):
+    M = data.shape[0]
+    # 创建原始数据的 x 轴坐标
+    x_original = np.linspace(0, 1, M)  # 原始数据的归一化坐标
+    x_new = np.linspace(0, 1, N)  # 新的数据坐标
+    # 插值函数
+    interpolating_function = interp1d(x_original, data.flatten(), kind='linear')
+    interpolated_data = interpolating_function(x_new)
+    return interpolated_data.reshape(N, 1)
 
 
 # @param data.shape: N * 1
@@ -50,7 +60,7 @@ def get_sliding_window_not_overlap(data, slidingWindowSize):
     while (i + slidingWindowSize <= data.shape[0]):
         new_data = torch.cat([new_data, data[i:i + slidingWindowSize, :].t()], dim=0)
         i = i + slidingWindowSize
-    return new_data
+    return new_data.float()
 
 
 # @param data.shape: N * dim
@@ -159,18 +169,17 @@ def CLIP_metric(naf_vector, af_vector):  # p n length
     af_vector = af_vector.reshape(af_vector.shape[0] * af_vector.shape[1], af_vector.shape[-1])
     diff = af_vector.unsqueeze(1) - naf_vector.unsqueeze(0)
     diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
-    diff = F.normalize(diff, dim=-1) #
+    diff = F.normalize(diff, dim=-1)
     return diff
 
 
 def CLIP_loss(naf_vector, af_vector):  # p n length   后面减去前面
     diff = CLIP_metric(naf_vector, af_vector)
     ans = 1 - torch.mm(diff, diff.t()) # 两两向量之间的余弦相似度
-    return torch.sum(ans)
+    return torch.sum(ans ** 2)
 
 
 if __name__ == '__main__':
-    data1 = torch.ones(2, 3, 5)
-    data2 = torch.zeros(3, 3, 5)
-    ans = CLIP_loss(data2, data1)
-    print(ans)
+    data1 = torch.tensor([[0],[1],[3]]).numpy()
+    print(data1)
+    print(bilinear_interpolate_1d(data1, 5))
