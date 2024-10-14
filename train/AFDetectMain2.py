@@ -13,6 +13,7 @@ torch.manual_seed(10)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+data_root_path = 'H:/iScience/房颤数据/杭州原始数据/'
 
 class ResNet(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size):
@@ -207,7 +208,7 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.001, e
                 # 自对齐（连续性）
                 loss1 += DataUtils.continuity_loss([ecg_af_mlp, bcg_af_mlp, ecg_naf_mlp, bcg_naf_mlp])
                 # 互对齐
-                loss2 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp)
+                loss2 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp) + DataUtils.CLIP_loss(bcg_naf_mlp, bcg_af_mlp)
                 # BCG方向与ECG方向对齐
                 loss3 += criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
                 # 按时间对齐提取到的特征
@@ -219,7 +220,7 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.001, e
         loss1 *= 1.0
         loss2 *= 1.0
         loss3 *= 1.0
-        loss4 *= 0.0
+        loss4 *= 1.0
         loss5 *= 1.0
         loss6 *= 1.0
         print(loss1, loss2, loss3, loss4, loss5, loss6)
@@ -264,9 +265,9 @@ def get_AF_DataSet(begin, read_length, slidingWindowSize):
     ]
 
     for i in range(len(ECGPathList)):
-        ECGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/ECG_cut/' + ECGPathList[i]
+        ECGPathList[i] = data_root_path + 'ECG_cut/' + ECGPathList[i]
     for i in range(len(BCGPathList)):
-        BCGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/BCG/' + BCGPathList[i]
+        BCGPathList[i] = data_root_path + 'BCG/' + BCGPathList[i]
 
     # begin = 1000
     # read_length = 10240
@@ -363,9 +364,9 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
     ]
 
     for i in range(len(ECGPathList)):
-        ECGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/ECG_cut/' + ECGPathList[i]
+        ECGPathList[i] = data_root_path + 'ECG_cut/' + ECGPathList[i]
     for i in range(len(BCGPathList)):
-        BCGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/BCG/' + BCGPathList[i]
+        BCGPathList[i] = data_root_path + 'BCG/' + BCGPathList[i]
 
     # begin = 1000
     # read_length = 10240

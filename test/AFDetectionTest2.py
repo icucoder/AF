@@ -6,6 +6,7 @@ from utils import DataUtils, PltUtils
 
 torch.manual_seed(10)
 
+data_root_path = 'H:/iScience/房颤数据/杭州原始数据/'
 
 # def get_AF_DataSet(begin, read_length, slidingWindowSize):
 #     ECGPathList = [
@@ -126,9 +127,9 @@ def get_AF_DataSet(begin, read_length, slidingWindowSize):
     ]
 
     for i in range(len(ECGPathList)):
-        ECGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/ECG_cut/' + ECGPathList[i]
+        ECGPathList[i] = data_root_path + 'ECG_cut/' + ECGPathList[i]
     for i in range(len(BCGPathList)):
-        BCGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/BCG/' + BCGPathList[i]
+        BCGPathList[i] = data_root_path + 'BCG/' + BCGPathList[i]
 
     # begin = 1000
     # read_length = 10240
@@ -225,9 +226,9 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
     ]
 
     for i in range(len(ECGPathList)):
-        ECGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/ECG_cut/' + ECGPathList[i]
+        ECGPathList[i] = data_root_path + 'ECG_cut/' + ECGPathList[i]
     for i in range(len(BCGPathList)):
-        BCGPathList[i] = 'H:/iScience/房颤数据/杭州原始数据/BCG/' + BCGPathList[i]
+        BCGPathList[i] = data_root_path + 'BCG/' + BCGPathList[i]
 
     # begin = 1000
     # read_length = 10240
