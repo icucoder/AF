@@ -172,7 +172,6 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
         '028.luamei.20180326.182402.37.ecg.na.csv',
         '029.shichenhao.20180327.233252.36.ecg.na.csv',
         '030.zhanghaiqiang.20180328.224655.36.ecg.na.csv',
-        '030.zhanghaiqiang.20180328.224655.36.ecg.na.csv',
         '031.yubin.20180329.191337.36.ecg.na.csv',
         '045.chensuhua.20180414.180932.35.na.ecg.csv',
         '046.wujinhua.20180414.185039.37.na.ecg.csv',
@@ -205,7 +204,6 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
         '026.shenying.20180326.181246.36.bcg.na.csv',
         '028.luamei.20180326.182402.37.bcg.na.csv',
         '029.shichenhao.20180327.233252.36.bcg.na.csv',
-        '030.zhanghaiqiang.20180328.224655.36.bcg.na.csv',
         '030.zhanghaiqiang.20180328.224655.36.bcg.na.csv',
         '031.yubin.20180329.191337.36.bcg.na.csv',
         '045.chensuhua.20180414.180932.35.na.bcg.csv',
@@ -256,7 +254,8 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
 
 def run_Encoder():
     begin = 1000
-    read_length = 10240
+    # read_length = 10240
+    read_length = 10240 * 3
     slidingWindowSize = 2048
     ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin, read_length, slidingWindowSize)
     ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin, read_length, slidingWindowSize)

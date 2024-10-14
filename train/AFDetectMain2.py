@@ -185,8 +185,8 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.001, e
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.7)
     dataset1 = TensorDataset(ecg_af, bcg_af)
     dataset2 = TensorDataset(ecg_naf, bcg_naf)
-    data_loader1 = DataLoader(dataset=dataset1, batch_size=16, shuffle=True)
-    data_loader2 = DataLoader(dataset=dataset2, batch_size=16, shuffle=True)
+    data_loader1 = DataLoader(dataset=dataset1, batch_size=8, shuffle=True)
+    data_loader2 = DataLoader(dataset=dataset2, batch_size=8, shuffle=True)
     for _ in tqdm(range(epoch)):
         optimizer.zero_grad()
 
@@ -217,18 +217,19 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.001, e
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
 
-        loss1 *= 1.0
-        loss2 *= 1.0
-        loss3 *= 1.0
-        loss4 *= 1.0
-        loss5 *= 1.0
-        loss6 *= 1.0
-        print(loss1, loss2, loss3, loss4, loss5, loss6)
-        loss = loss1 + loss2 + loss3 + loss4 + loss5 + loss6
+            loss1 *= 1.0
+            loss2 *= 1.0
+            loss3 *= 1.0
+            loss4 *= 1.0
+            loss5 *= 1.0
+            loss6 *= 1.0
+            print(loss1, loss2, loss3, loss4, loss5, loss6)
+            loss = loss1 + loss2 + loss3 + loss4 + loss5 + loss6
 
-        loss.backward()
-        LossRecord.append(loss.item())
-        optimizer.step()
+            loss.backward()
+            LossRecord.append(loss.item())
+            optimizer.step()
+
         scheduler.step()
     LossRecord = torch.tensor(LossRecord, device="cpu")
     plt.plot(LossRecord)
@@ -310,7 +311,6 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
         '028.luamei.20180326.182402.37.ecg.na.csv',
         '029.shichenhao.20180327.233252.36.ecg.na.csv',
         '030.zhanghaiqiang.20180328.224655.36.ecg.na.csv',
-        '030.zhanghaiqiang.20180328.224655.36.ecg.na.csv',
         '031.yubin.20180329.191337.36.ecg.na.csv',
         '045.chensuhua.20180414.180932.35.na.ecg.csv',
         '046.wujinhua.20180414.185039.37.na.ecg.csv',
@@ -343,7 +343,6 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
         '026.shenying.20180326.181246.36.bcg.na.csv',
         '028.luamei.20180326.182402.37.bcg.na.csv',
         '029.shichenhao.20180327.233252.36.bcg.na.csv',
-        '030.zhanghaiqiang.20180328.224655.36.bcg.na.csv',
         '030.zhanghaiqiang.20180328.224655.36.bcg.na.csv',
         '031.yubin.20180329.191337.36.bcg.na.csv',
         '045.chensuhua.20180414.180932.35.na.bcg.csv',
