@@ -28,7 +28,7 @@ def read_numpy_from_CSV_data(path, begin, length, column=1):
 # 同上
 # f: 数据采样频率，读出数据后会统一转化为125Hz数据，输出的length统一按照125HZ计算
 def read_torch_from_CSV_data(path, begin, length, f=125.0, column=1):
-    data = read_numpy_from_CSV_data(path, begin, int(length * f / 125.0), column) # shape: (length * f / 125.0) * 1
+    data = read_numpy_from_CSV_data(path, int(begin * f / 125.0), int(length * f / 125.0), column) # shape: (length * f / 125.0) * 1
     data = bilinear_interpolate_1d(data, length) # 将读取的数据转化为125Hz
     return torch.from_numpy(data)
 
