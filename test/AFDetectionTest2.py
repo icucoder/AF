@@ -1,6 +1,7 @@
-from train.AFDetectMain2 import *
+import os
+os.environ['TORCH_HOME'] = os.getcwd()
 
-from utils import DataUtils, PltUtils
+from train.AFDetectMain2 import *
 
 from utils import DataUtils, PltUtils
 
@@ -255,7 +256,7 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
 def run_Encoder():
     begin = 1000
     # read_length = 10240
-    read_length = 10240 * 3
+    read_length = 10240
     slidingWindowSize = 2048
     ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin, read_length, slidingWindowSize)
     ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin, read_length, slidingWindowSize)
@@ -267,14 +268,26 @@ def run_Encoder():
     print(ECG_vector.shape, BCG_vector.shape)
     # PltUtils.plot_all_data(ECG_vector)
 
-    model = torch.load("../model/ResNetModel.pth", weights_only=False).eval()
+    model = torch.load("../model/ResNetModel.pth").eval()
 
     ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(ECG_AF_vector, BCG_AF_vector)
     ecg_naf_feature, bcg_naf_feature, ecg_naf_mlp, bcg_naf_mlp, ecg_naf_restruct, bcg_naf_restruct = model(ECG_NAF_vector, BCG_NAF_vector)
     print(ecg_af_feature.shape, bcg_af_feature.shape, ecg_af_mlp.shape, bcg_af_mlp.shape, ecg_af_restruct.shape, bcg_af_restruct.shape)
     print(ecg_naf_feature.shape, bcg_naf_feature.shape, ecg_naf_mlp.shape, bcg_naf_mlp.shape, ecg_naf_restruct.shape, bcg_naf_restruct.shape)
 
+    torch.save(ecg_af_mlp, "../output/ecg_af_mlp.pth")
+    torch.save(ecg_naf_mlp, "../output/ecg_naf_mlp.pth")
+    torch.save(bcg_af_mlp, "../output/bcg_af_mlp.pth")
+    torch.save(bcg_naf_mlp, "../output/bcg_naf_mlp.pth")
+
     PltUtils.plot_2D_PCA_one_Figure([
+        ecg_af_mlp,  # 有病的ECG
+        ecg_naf_mlp,  # 无病的ECG
+        bcg_af_mlp,  # 有病的BCG
+        bcg_naf_mlp,  # 无病的BCG
+    ])
+
+    PltUtils.plot_3D_PCA_one_Figure([
         ecg_af_mlp,  # 有病的ECG
         ecg_naf_mlp,  # 无病的ECG
         bcg_af_mlp,  # 有病的BCG

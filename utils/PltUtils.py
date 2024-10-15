@@ -98,6 +98,77 @@ def plot_2D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
     return
 
 
+def plot_3D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
+    length_list = [0]
+    processed_data_list = []  # 存放的数据形状shape：(P * N), length
+    for data in data_list:
+        P, N, data_length = data.shape
+        length_list.append(length_list[-1] + P * N)
+        data = data.reshape(P * N, data_length)
+        processed_data_list.append(data)
+    all_data = torch.cat(processed_data_list, dim=0)
+
+    # 应用 t-SNE 降维到二维空间
+    # tsne = TSNE(n_components=2, random_state=42)
+    # embedded_data = tsne.fit_transform(all_data.detach().numpy())
+    # 应用 PCA 降维到二维空间
+    pca = PCA(n_components=3, random_state=42)
+    embedded_data = pca.fit_transform(all_data.detach().numpy())
+
+    # 可视化
+    fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+
+    # 定义颜色
+    colors = ['r', 'g', 'b', 'y']
+    label_names = ['AF_ECG', 'NAF_ECG', 'AF_BCG', 'NAF_BCG']
+
+    # 绘制BCG、ECG到131中
+    ax = fig.add_subplot(131, projection='3d')
+    for i in range(len(data_list)):
+        ax.scatter(
+            embedded_data[length_list[i]:length_list[i + 1], 0],
+            embedded_data[length_list[i]:length_list[i + 1], 1],
+            embedded_data[length_list[i]:length_list[i + 1], 2],
+            c=colors[i], label=label_names[i]
+        )
+        for j in range(length_list[i], length_list[i + 1]):
+            ax.text(
+                embedded_data[j][0],
+                embedded_data[j][1],
+                embedded_data[j][2],
+                str(j),
+            )
+        plt.legend()
+
+
+    # 分别绘制ECG、BCG到132、133两幅图中
+    # 绘制每个类别的数据
+    fig_list = [132, 133]
+    for i in range(len(data_list)):
+        if i % 2 == 0:
+            ax = fig.add_subplot(fig_list[i // 2], projection='3d')
+        # ax = fig.add_subplot(111)
+        ax.scatter(
+            embedded_data[length_list[i]:length_list[i + 1], 0],
+            embedded_data[length_list[i]:length_list[i + 1], 1],
+            embedded_data[length_list[i]:length_list[i + 1], 2],
+            c=colors[i], label=label_names[i]
+        )
+        for j in range(length_list[i], length_list[i + 1]):
+            ax.text(
+                embedded_data[j][0],
+                embedded_data[j][1],
+                embedded_data[j][2],
+                str(j),
+            )
+        plt.legend()
+
+    plt.title('PCA visualization of different classes')
+    plt.show()
+    return
+
+
 def plot_all_data(data):
     for i in range(data.shape[0]):
         plt.plot(data[i][0].detach().numpy())

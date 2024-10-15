@@ -28,9 +28,11 @@ def read_numpy_from_CSV_data(path, begin, length, column=1):
 # 同上
 # f: 数据采样频率，读出数据后会统一转化为125Hz数据，输出的length统一按照125HZ计算
 def read_torch_from_CSV_data(path, begin, length, f=125.0, column=1):
-    data = read_numpy_from_CSV_data(path, int(begin * f / 125.0), int(length * f / 125.0), column) # shape: (length * f / 125.0) * 1
-    data = bilinear_interpolate_1d(data, length) # 将读取的数据转化为125Hz
+    data = read_numpy_from_CSV_data(path, int(begin * f / 125.0), int(length * f / 125.0),
+                                    column)  # shape: (length * f / 125.0) * 1
+    data = bilinear_interpolate_1d(data, length)  # 将读取的数据转化为125Hz
     return torch.from_numpy(data)
+
 
 # 将形状为 M*1 的数据进行双线性插值到 N*1 的数据
 def bilinear_interpolate_1d(data, N):
@@ -141,7 +143,8 @@ def get_DataSet():
     BCG_vector = torch.zeros(0, 1, slidingWindowSize)
     for i in range(len(ECGPathList)):
         ECG = read_torch_from_CSV_data(path=ECGPathList[i], begin=0, length=read_length, column=1, isKansas=True)
-        BCG = read_torch_from_CSV_data(path=BCGPathList[i], begin=0, length=int(read_length * 1), column=1, isKansas=True)
+        BCG = read_torch_from_CSV_data(path=BCGPathList[i], begin=0, length=int(read_length * 1), column=1,
+                                       isKansas=True)
         BCG = butter_bandpass_filter(BCG, 125, 1.0, 8.4)
         ECG_tmp = get_sliding_window_overlap(ECG, slidingWindowSize=slidingWindowSize).unsqueeze(1)
         BCG_tmp = get_sliding_window_overlap(BCG, slidingWindowSize=slidingWindowSize).unsqueeze(1)
@@ -175,11 +178,27 @@ def CLIP_metric(naf_vector, af_vector):  # p n length
 
 def CLIP_loss(naf_vector, af_vector):  # p n length   后面减去前面
     diff = CLIP_metric(naf_vector, af_vector)
-    ans = 1 - torch.mm(diff, diff.t()) # 两两向量之间的余弦相似度
+    ans = 1 - torch.mm(diff, diff.t())  # 两两向量之间的余弦相似度
     return torch.sum(ans ** 2)
 
 
+def MetricLoss(naf_vector, af_vector, margin):  # p1 n1 length   p2 n2 length
+    # 重构形状：(p1*n1) length  (p2*n2) length
+    naf_vector = naf_vector.reshape(naf_vector.shape[0] * naf_vector.shape[1], naf_vector.shape[-1])
+    af_vector = af_vector.reshape(af_vector.shape[0] * af_vector.shape[1], af_vector.shape[-1])
+    # 使用广播做向量减法 输出形状： (p1*n1)*(p2*n2) length
+    diff = af_vector.unsqueeze(1) - naf_vector.unsqueeze(0)
+    diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
+    # 计算向量长度  (p*n) 1
+    distance = torch.sum(diff * diff, dim=1) ** 0.5
+    # 计算loss
+    relu = nn.ReLU()
+    loss = torch.sum(relu(margin - distance))
+    return loss
+
+
 if __name__ == '__main__':
-    data1 = torch.tensor([[0],[1],[3]]).numpy()
-    print(data1)
-    print(bilinear_interpolate_1d(data1, 5))
+    data1 = torch.ones(5, 1, 10)
+    data2 = torch.zeros(6, 1, 10)
+    distance = MetricLoss(data1, data2, 5)
+    print(distance)
