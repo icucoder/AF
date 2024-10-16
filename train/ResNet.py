@@ -86,7 +86,7 @@ class ResNet(nn.Module):
         layers = []
         for stride in strides:
             layers.append(block(self.current_channels, out_channels, stride))
-            self.current_channels = out_channels * block.expansion
+            self.current_channels = out_channels * block.expansion # 1
         return nn.Sequential(*layers)
 
 
@@ -96,6 +96,7 @@ class ResNet(nn.Module):
         f3 = self.conv3(f2)
         f4 = self.conv4(f3)
         f5 = self.conv5(f4)
+        print(f5.shape)
         output = self.softmax(self.fc(self.avgPool(f5).squeeze(-1)))
         return output
 
@@ -117,6 +118,7 @@ def resnet152(in_channels, num_classes):
 
 if __name__ == '__main__':
     # model = resnet18(in_channels = 1, num_classes = 2)
-    model = resnet152(in_channels = 1, num_classes = 2)
-    x = torch.randn(10, 1, 300)
+    model = resnet50(in_channels = 1, num_classes = 2)
+    x = torch.randn(10, 1, 2048)
     print(model(x).shape)
+

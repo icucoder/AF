@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from utils.PltUtils import *
 
 data_root_path = 'H:/iScience/房颤数据/杭州原始数据/'
@@ -147,19 +149,25 @@ def plot_origin_process_data():
     for i in range(ECG_AF_vector.shape[0]):
         for j in range(ECG_AF_vector.shape[1]):
             plt.subplot(ECG_AF_vector.shape[1], 2, j * 2 + 1)
-            if j == 0: plt.title("AF (ECG left) (BCG right)")
+            if j == 0:
+                plt.title("AF (ECG left) (BCG right)")
             plt.plot(ECG_AF_vector[i][j].detach().numpy())
+            plt.ylim(-3, 3)
             plt.subplot(ECG_AF_vector.shape[1], 2, j * 2 + 2)
             plt.plot(BCG_AF_vector[i][j].detach().numpy())
+            plt.ylim(-3, 3)
         plt.show()
 
     for i in range(ECG_NAF_vector.shape[0]):
         for j in range(ECG_NAF_vector.shape[1]):
             plt.subplot(ECG_NAF_vector.shape[1], 2, j * 2 + 1)
-            if j == 0: plt.title("NAF (ECG left) (BCG right)")
+            if j == 0:
+                plt.title("NAF (ECG left) (BCG right)")
             plt.plot(ECG_NAF_vector[i][j].detach().numpy())
+            plt.ylim(-3, 3)
             plt.subplot(ECG_NAF_vector.shape[1], 2, j * 2 + 2)
             plt.plot(BCG_NAF_vector[i][j].detach().numpy())
+            plt.ylim(-3, 3)
         plt.show()
 
 
