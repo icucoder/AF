@@ -1,0 +1,3 @@
+处理源数据.py：获取训练集
+AFDetectionMain2.py：预训练方向对齐
+AFMLPMain.py：专项方向对齐
