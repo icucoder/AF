@@ -204,7 +204,7 @@ class MyNet(nn.Module):
         )
 
 
-def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, label, lr=0.001, epoch=2):
+def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2):
     criterion = nn.MSELoss()
     # crossloss = nn.CrossEntropyLoss()
     crossloss = nn.BCELoss()
@@ -299,7 +299,11 @@ def run_Encoder():
 
 
 if __name__ == '__main__':
-    run_Encoder()
+    # run_Encoder()
+    data = torch.rand(5,20,2048)
+    model = MyNet()
+    ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(data, data)
+    print(ecg_af_feature.shape, bcg_af_feature.shape, ecg_af_mlp.shape, bcg_af_mlp.shape, ecg_af_restruct.shape, bcg_af_restruct.shape)
 
 # 自对齐：把每个人内部的NAF/AF特征排列成线性
 # 互对齐：将所有NAF聚集、将所有AF聚集
