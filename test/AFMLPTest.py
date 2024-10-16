@@ -1,4 +1,4 @@
-from train.AFMLP import *
+from train.AFMLPMain import *
 
 from utils import DataUtils, PltUtils
 

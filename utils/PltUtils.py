@@ -169,6 +169,10 @@ def plot_3D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
     return
 
 
+def plot_origin_bcg_ecg_by_index(data_list, index):
+    return
+
+
 def plot_all_data(data):
     for i in range(data.shape[0]):
         plt.plot(data[i][0].detach().numpy())

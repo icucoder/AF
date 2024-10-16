@@ -388,18 +388,21 @@ def get_NAF_DataSet(begin, read_length, slidingWindowSize):
 
 
 def run_Encoder():
-    begin = 1000
-    read_length = 10240
-    slidingWindowSize = 2048
-    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin, read_length, slidingWindowSize)
-    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin, read_length, slidingWindowSize)
+    # begin = 1000
+    # read_length = 10240
+    # slidingWindowSize = 2048
+    # ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin, read_length, slidingWindowSize)
+    # ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin, read_length, slidingWindowSize)
+
+    ECG_AF_vector = torch.load("../dataset/ECG_AF_vector.pth")
+    BCG_AF_vector = torch.load("../dataset/BCG_AF_vector.pth")
+    ECG_NAF_vector = torch.load("../dataset/ECG_NAF_vector.pth")
+    BCG_NAF_vector = torch.load("../dataset/BCG_NAF_vector.pth")
 
     ECG_vector = torch.cat([ECG_AF_vector, ECG_NAF_vector], dim=0)
     BCG_vector = torch.cat([BCG_AF_vector, BCG_NAF_vector], dim=0)
-    label = torch.cat([AF_label, NAF_label], dim=0)
 
     print(ECG_vector.shape, BCG_vector.shape)
-    # PltUtils.plot_all_data(ECG_vector)
 
     model = MyNet()
     model = train_Encoder(
@@ -408,7 +411,6 @@ def run_Encoder():
         ecg_naf=ECG_NAF_vector.data.cuda(),
         bcg_af=BCG_AF_vector.data.cuda(),
         bcg_naf=BCG_NAF_vector.data.cuda(),
-        label=label.cuda(),
         lr=0.0003,
         epoch=1000
     )
