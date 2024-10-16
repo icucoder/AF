@@ -104,8 +104,7 @@ class ResNet(nn.Module):
         f3 = self.conv3(f2)
         f4 = self.conv4(f3)
         f5 = self.conv5(f4)
-        print(f5.shape)
-        output = self.softmax(self.fc(self.avgPool(f5).squeeze(-1)))
+        output = self.softmax(self.fc(self.avgPool(f5).transpose(-1, -2)))
         return output
 
 class DecoderBlock(nn.Module):
@@ -260,10 +259,6 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
     plt.show()
     return model.cpu()
 
-
-
-
-
 def run_Encoder():
     # begin = 1000
     # read_length = 10240
@@ -299,11 +294,11 @@ def run_Encoder():
 
 
 if __name__ == '__main__':
-    # run_Encoder()
-    data = torch.rand(5,20,2048)
-    model = MyNet()
-    ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(data, data)
-    print(ecg_af_feature.shape, bcg_af_feature.shape, ecg_af_mlp.shape, bcg_af_mlp.shape, ecg_af_restruct.shape, bcg_af_restruct.shape)
+    run_Encoder()
+    # data = torch.rand(5,10,2048)
+    # model = MyNet()
+    # ecg_af_feature, bcg_af_feature, ecg_af_mlp, bcg_af_mlp, ecg_af_restruct, bcg_af_restruct = model(data, data)
+    # print(ecg_af_feature.shape, bcg_af_feature.shape, ecg_af_mlp.shape, bcg_af_mlp.shape, ecg_af_restruct.shape, bcg_af_restruct.shape)
 
 # 自对齐：把每个人内部的NAF/AF特征排列成线性
 # 互对齐：将所有NAF聚集、将所有AF聚集
