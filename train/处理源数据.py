@@ -120,8 +120,7 @@ def get_NAF_DataSet(begin_list, read_length, slidingWindowSize):
 
 def run_Process():
     begin_list1 = [
-        275000, 136000, 155900, 60000, 120000,
-        61000, 20000, 247000, 206000, 121000,
+        275000, 136000, 155900, 60000, 120000, 61000, 20000, 247000, 206000, 121000,
         188000, ]
     begin_list2 = [
         280000, 60000, 20000, 20000, 20000, 50000, 70000, 20000, 20000, 20000, 40000, 120000, 90000, 180000,
@@ -202,7 +201,7 @@ def HRV():
 
 
 if __name__ == '__main__':
-    # run_Process() # 生成源数据集
+    run_Process() # 生成源数据集
     # plot_origin_process_data()  # 绘制源数据集
-    plot_origin_process_data_by_index(AF_index=7, NAF_index=7)
+    # plot_origin_process_data_by_index(AF_index=7, NAF_index=7)
     # SDNN HRV  绘制箱线图
