@@ -120,7 +120,7 @@ class MLP(nn.Module):
         )
         self.fc2 = nn.Sequential(
             nn.Linear(256, 256),
-            nn.LeakyReLU(),
+            # nn.LeakyReLU(),
             nn.BatchNorm1d(1),
             nn.Linear(256, 64)
         )
@@ -216,8 +216,8 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
                 # 尝试添加三元组损失margin  绘制图中最好能够将每一个数据点对应的原片段绘制出来辅助观测是否真的为AF
-                margin = 50
-                loss5 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
+                margin = 10
+                loss7 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
 
                 loss1 *= 1.0
                 loss2 *= 100.0
@@ -268,7 +268,7 @@ def run_Encoder():
         bcg_af=BCG_AF_vector.data,
         bcg_naf=BCG_NAF_vector.data,
         lr=0.0003,
-        epoch=1000
+        epoch=3000
     )
 
     # ecg_feature, bcg_feature, ecg_ans, bcg_ans, ecg_restruct, bcg_restruct = model(ECG_vector, BCG_vector)

@@ -1,6 +1,5 @@
-import matplotlib.pyplot as plt
-
 from utils.PltUtils import *
+import process.ECGRPeakDetect as tkE
 
 data_root_path = 'H:/iScience/房颤数据/杭州原始数据/'
 
@@ -121,7 +120,9 @@ def get_NAF_DataSet(begin_list, read_length, slidingWindowSize):
 
 def run_Process():
     begin_list1 = [
-        95000, 105000, 20000, 60000, 20000, 130000, 20000, 80000, 20000, 150000, 80000]
+        275000, 136000, 155900, 60000, 120000,
+        61000, 20000, 247000, 206000, 121000,
+        188000, ]
     begin_list2 = [
         280000, 60000, 20000, 20000, 20000, 50000, 70000, 20000, 20000, 20000, 40000, 120000, 90000, 180000,
         110000, 80000, 20000, 20000, 20000, 20000, 20000, 80000, 20000, 20000, 30000, 80000, 20000, 20000, 20000, 45000,
@@ -171,6 +172,37 @@ def plot_origin_process_data():
         plt.show()
 
 
+def plot_origin_process_data_by_index(AF_index, NAF_index):
+    ECG_AF_vector = torch.load("../dataset/ECG_AF_vector.pth")
+    BCG_AF_vector = torch.load("../dataset/BCG_AF_vector.pth")
+    ECG_NAF_vector = torch.load("../dataset/ECG_NAF_vector.pth")
+    BCG_NAF_vector = torch.load("../dataset/BCG_NAF_vector.pth")
+
+    for j in range(ECG_AF_vector.shape[1]):
+        plt.subplot(ECG_AF_vector.shape[1], 2, j * 2 + 1)
+        if j == 0:
+            plt.title("(AF ECG left) (NAF ECG right)")
+        ecg1 = ECG_AF_vector[AF_index][j].detach()
+        _, _, _, filterQrsIndex = tkE.panTomkinsAlgorithm(ecg1, ecg1, fs=125)
+        plt.plot(ECG_AF_vector[AF_index][j].detach().numpy())
+        plt.plot(filterQrsIndex, ecg1[filterQrsIndex], '*')
+        plt.ylim(-5, 10)
+        plt.subplot(ECG_AF_vector.shape[1], 2, j * 2 + 2)
+        ecg2 = ECG_NAF_vector[AF_index][j].detach()
+        _, _, _, filterQrsIndex = tkE.panTomkinsAlgorithm(ecg2, ecg2, fs=125)
+        plt.plot(ECG_NAF_vector[NAF_index][j].detach().numpy())
+        plt.plot(filterQrsIndex, ecg2[filterQrsIndex], '*')
+        plt.ylim(-5, 10)
+
+    plt.show()
+
+
+def HRV():
+    return
+
+
 if __name__ == '__main__':
     # run_Process() # 生成源数据集
-    plot_origin_process_data()  # 绘制源数据集
+    # plot_origin_process_data()  # 绘制源数据集
+    plot_origin_process_data_by_index(AF_index=7, NAF_index=7)
+    # SDNN HRV  绘制箱线图

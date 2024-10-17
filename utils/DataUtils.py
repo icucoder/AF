@@ -191,7 +191,9 @@ def MetricLoss(naf_vector, af_vector, margin):  # p1 n1 length   p2 n2 length
     diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
     # 计算向量长度  (p*n) 1
     distance = torch.sum(diff * diff, dim=1) ** 0.5
-    # 计算loss
+    # 计算loss:
+    # if(distance>margin) loss += 0
+    # if(distance<margin) loss += margin - distance
     relu = nn.ReLU()
     loss = torch.sum(relu(margin - distance))
     return loss
