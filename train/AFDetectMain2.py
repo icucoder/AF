@@ -109,23 +109,25 @@ class MLP(nn.Module):
     def __init__(self):
         super().__init__()
         # self.d_k = 1024
-        self.linear1 = nn.Linear(256, 10000)
         # self.linear2 = nn.Linear(256, 10000)
         # self.linear3 = nn.Linear(256, 10000)
         self.softmax = nn.Softmax(dim=-1)
-        self.fc = nn.Sequential(
-            # nn.Linear(10000, 10000),
+        self.fc1 = nn.Sequential(
+            nn.Linear(256, 10000),
             nn.LeakyReLU(),
-            # nn.BatchNorm1d(1),
+            nn.BatchNorm1d(1),
             nn.Linear(10000, 256)
+        )
+        self.fc2 = nn.Sequential(
+            nn.Linear(256, 256),
+            nn.LeakyReLU(),
+            nn.BatchNorm1d(1),
+            nn.Linear(256, 64)
         )
 
     def forward(self, input):
-        output = self.linear1(input)
-        # k = self.linear2(input)
-        # v = self.linear3(input)
-        # output = torch.matmul(self.softmax(torch.matmul(output, k.transpose(-1, -2)) * self.d_k), v)
-        output = self.fc(output)
+        output = self.fc1(input)
+        output = self.fc2(output)
         return output
 
 
@@ -184,13 +186,13 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.7)
     dataset1 = TensorDataset(ecg_af, bcg_af)
     dataset2 = TensorDataset(ecg_naf, bcg_naf)
-    data_loader1 = DataLoader(dataset=dataset1, batch_size=8, shuffle=True)
-    data_loader2 = DataLoader(dataset=dataset2, batch_size=8, shuffle=True)
+    data_loader1 = DataLoader(dataset=dataset1, batch_size=6, shuffle=True)
+    data_loader2 = DataLoader(dataset=dataset2, batch_size=6, shuffle=True)
     for _ in tqdm(range(epoch)):
         for __, af_data_sample in enumerate(data_loader1, 1):
             for __, naf_data_sample in enumerate(data_loader2, 1):
                 optimizer.zero_grad()
-                loss1, loss2, loss3, loss4, loss5, loss6 = 0, 0, 0, 0, 0, 0
+                loss1, loss2, loss3, loss4, loss5, loss6, loss7 = 0, 0, 0, 0, 0, 0, 0
                 # 16 1 2048  16 1 2048
                 ecg_af_sample, bcg_af_sample = af_data_sample
                 ecg_naf_sample, bcg_naf_sample = naf_data_sample
@@ -214,15 +216,18 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
                 # 尝试添加三元组损失margin  绘制图中最好能够将每一个数据点对应的原片段绘制出来辅助观测是否真的为AF
+                margin = 50
+                loss5 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
 
                 loss1 *= 1.0
-                loss2 *= 1.0
-                loss3 *= 1.0
-                loss4 *= 1.0
+                loss2 *= 100.0
+                loss3 *= 10.0
+                loss4 *= 0.0
                 loss5 *= 1.0
                 loss6 *= 1.0
-                print(loss1, loss2, loss3, loss4, loss5, loss6)
-                loss = loss1 + loss2 + loss3 + loss4 + loss5 + loss6
+                loss7 *= 10.0
+                print(loss1, loss2, loss3, loss4, loss5, loss6, loss7)
+                loss = loss1 + loss2 + loss3 + loss4 + loss5 + loss6 + loss7
 
                 loss.backward()
                 LossRecord.append(loss.item())

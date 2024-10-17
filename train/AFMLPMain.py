@@ -41,17 +41,20 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.7)
     dataset1 = TensorDataset(ecg_af, bcg_af)
     dataset2 = TensorDataset(ecg_naf, bcg_naf)
-    data_loader1 = DataLoader(dataset=dataset1, batch_size=16, shuffle=True)
-    data_loader2 = DataLoader(dataset=dataset2, batch_size=16, shuffle=True)
+    data_loader1 = DataLoader(dataset=dataset1, batch_size=8, shuffle=True)
+    data_loader2 = DataLoader(dataset=dataset2, batch_size=8, shuffle=True)
     for _ in tqdm(range(epoch)):
-
         for __, af_data_sample in enumerate(data_loader1, 1):
-            optimizer.zero_grad()
-            loss1, loss2, loss3, loss4, loss5, loss6 = 0, 0, 0, 0, 0, 0
             for __, naf_data_sample in enumerate(data_loader2, 1):
+                optimizer.zero_grad()
+                loss1, loss2, loss3, loss4, loss5, loss6 = 0, 0, 0, 0, 0, 0
                 # 获取数据
                 ecg_af_mlp, bcg_af_mlp = af_data_sample
                 ecg_naf_mlp, bcg_naf_mlp = naf_data_sample
+                ecg_af_mlp = ecg_af_mlp.cuda()
+                bcg_af_mlp = bcg_af_mlp.cuda()
+                ecg_naf_mlp = ecg_naf_mlp.cuda()
+                bcg_naf_mlp = bcg_naf_mlp.cuda()
                 # 输入模型获取输出结果
                 ecg_af_mlp_f = model(ecg_af_mlp)
                 bcg_af_mlp_f = model(bcg_af_mlp)
@@ -70,17 +73,17 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
                 margin = 10
                 loss5 += DataUtils.MetricLoss(ecg_naf_mlp_f, ecg_af_mlp_f, margin) + DataUtils.MetricLoss(bcg_naf_mlp_f, bcg_af_mlp_f, margin)
 
-            loss1 *= 1.0
-            loss2 *= 1.0
-            loss3 *= 1.0
-            loss4 *= 1.0
-            loss5 *= 100.0
-            print(loss1, loss2, loss3, loss4, loss5)
-            loss = loss1 + loss2 + loss3 + loss4 + loss5
+                loss1 *= 1.0
+                loss2 *= 1.0
+                loss3 *= 1.0
+                loss4 *= 1.0
+                loss5 *= 100.0
+                print(loss1, loss2, loss3, loss4, loss5)
+                loss = loss1 + loss2 + loss3 + loss4 + loss5
 
-            loss.backward()
-            LossRecord.append(loss.item())
-            optimizer.step()
+                loss.backward()
+                LossRecord.append(loss.item())
+                optimizer.step()
 
         scheduler.step()
     LossRecord = torch.tensor(LossRecord, device="cpu")
@@ -104,10 +107,10 @@ if __name__ == '__main__':
 
     model = train_Encoder(
         model=model.cuda(),
-        ecg_af=ecg_af_mlp.data.cuda(),
-        ecg_naf=ecg_naf_mlp.data.cuda(),
-        bcg_af=bcg_af_mlp.data.cuda(),
-        bcg_naf=bcg_naf_mlp.data.cuda(),
+        ecg_af=ecg_af_mlp.data,
+        ecg_naf=ecg_naf_mlp.data,
+        bcg_af=bcg_af_mlp.data,
+        bcg_naf=bcg_naf_mlp.data,
         lr=0.003,
         epoch=1000
     )

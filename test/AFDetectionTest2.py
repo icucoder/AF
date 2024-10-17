@@ -201,12 +201,12 @@ def run_Encoder():
         bcg_naf_mlp,  # 无病的BCG
     ])
 
-    PltUtils.plot_3D_PCA_one_Figure([
-        ecg_af_mlp,  # 有病的ECG
-        ecg_naf_mlp,  # 无病的ECG
-        bcg_af_mlp,  # 有病的BCG
-        bcg_naf_mlp,  # 无病的BCG
-    ])
+    # PltUtils.plot_3D_PCA_one_Figure([
+    #     ecg_af_mlp,  # 有病的ECG
+    #     ecg_naf_mlp,  # 无病的ECG
+    #     bcg_af_mlp,  # 有病的BCG
+    #     bcg_naf_mlp,  # 无病的BCG
+    # ])
 
 
 if __name__ == '__main__':

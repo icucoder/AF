@@ -88,6 +88,13 @@ def plot_2D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
             # embedded_data[length_list[i]:length_list[i + 1], 2],
             c=colors[i], label=label_names[i]
         )
+        for j in range(length_list[i], length_list[i + 1]):
+            ax.text(
+                embedded_data[j][0],
+                embedded_data[j][1],
+                str(j),
+                color=colors[i]
+            )
         plt.legend()
 
     plt.title('t-SNE visualization of different classes')
