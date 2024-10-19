@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
+import process.ECGRPeakDetect as tkE
 from utils import DataUtils
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -148,7 +149,6 @@ def plot_3D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
             )
         plt.legend()
 
-
     # 分别绘制ECG、BCG到132、133两幅图中
     # 绘制每个类别的数据
     fig_list = [132, 133]
@@ -176,7 +176,69 @@ def plot_3D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
     return
 
 
-def plot_origin_bcg_ecg_by_index(data_list, index):
+# 根据datalist、colorlist、labellist分别绘制输入的信号
+def plot_2D_PCA_Figure_by_data_color_label(data_list, colors, label_names, is_show_number=False):  # 输入数据形状shape：P, N, length
+    length_list = [0]
+    processed_data_list = []  # 存放的数据形状shape：(P * N), length
+    for data in data_list:
+        P, N, data_length = data.shape
+        length_list.append(length_list[-1] + P * N)
+        data = data.reshape(P * N, data_length)
+        processed_data_list.append(data)
+    all_data = torch.cat(processed_data_list, dim=0)
+
+    # 应用 t-SNE 降维到二维空间
+    # tsne = TSNE(n_components=2, random_state=42)
+    # embedded_data = tsne.fit_transform(all_data.detach().numpy())
+    # 应用 PCA 降维到二维空间
+    pca = PCA(n_components=2, random_state=42)
+    embedded_data = pca.fit_transform(all_data.detach().numpy())
+
+    # 可视化
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    # ax = fig.add_subplot(111, projection='3d')
+
+    # 定义颜色
+    # colors = ['r', 'g', 'b', 'y']
+    # label_names = ['AF_ECG', 'NAF_ECG', 'AF_BCG', 'NAF_BCG']
+    # fig_list = [121, 122]
+    # 绘制每个类别的数据
+    for i in range(len(data_list)):
+        ax.scatter(
+            embedded_data[length_list[i]:length_list[i + 1], 0],
+            embedded_data[length_list[i]:length_list[i + 1], 1],
+            c=colors[i], label=label_names[i]
+        )
+        if is_show_number == True:
+            for j in range(length_list[i], length_list[i + 1]):
+                ax.text(
+                    embedded_data[j][0],
+                    embedded_data[j][1],
+                    str(j),
+                    color=colors[i]
+                )
+        plt.legend()
+
+    plt.title('t-SNE visualization of different classes')
+    plt.show()
+    return
+
+
+def plot_origin_ecg_by_one_person_data_list(data_list, title):# 要求每个data的形状：1, N, length
+    # fig = plt.figure()
+    # fig.clear()
+    plt.suptitle(title)
+    for i in range(len(data_list)):
+        data = data_list[i]
+        for j in range(data.shape[1]):
+            plt.subplot(data.shape[1], len(data_list), j * len(data_list) + i + 1)
+            ecg1 = data[0][j].detach()
+            _, _, _, filterQrsIndex = tkE.panTomkinsAlgorithm(ecg1, ecg1, fs=125)
+            plt.plot(ecg1.numpy())
+            plt.plot(filterQrsIndex, ecg1[filterQrsIndex], '*')
+            plt.ylim(-5, 10)
+    plt.show()
     return
 
 

@@ -25,10 +25,10 @@ def only_plot_2D_PCA_one_Figure(model, ECG_AF_vector, BCG_AF_vector, ECG_NAF_vec
         processed_data_list.append(data)
     all_data = torch.cat(processed_data_list, dim=0)
 
-    # pca = PCA(n_components=2, random_state=42)
-    # embedded_data = pca.fit_transform(all_data.detach().numpy())
-    tsne = TSNE(n_components=2, random_state=42)
-    embedded_data = tsne.fit_transform(all_data.detach().numpy())
+    pca = PCA(n_components=2, random_state=42)
+    embedded_data = pca.fit_transform(all_data.detach().numpy())
+    # tsne = TSNE(n_components=2, random_state=42)
+    # embedded_data = tsne.fit_transform(all_data.detach().numpy())
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -72,11 +72,19 @@ if __name__ == '__main__':
 
     model = torch.load("../model/ResNetModel.pth").eval()
 
-    AF_index_list = [1,2,3,4,5,6,7,8]
-    NAF_index_list = [1,2,3,4,5,6,7,8]
-    AF_color_list = ['r','y','r','y','r','y','r','y',]
-    NAF_color_list = ['b','black','b','black','b','black','b','black',]
+    # AF_index_list = [1,2,3,4,5,6,7,8]
+    # NAF_index_list = [1,2,3,4,5,6,7,8]
+    # AF_color_list = ['r','y','r','y','r','y','r','y',]
+    # NAF_color_list = ['b','black','b','black','b','black','b','black',]
+    AF_index_list = [7, 8]
+    NAF_index_list = [6, 10]
+    AF_color_list = ['r', 'y', ]
+    NAF_color_list = ['b', 'black', ]
     # _, _, ecg_naf_mlp, bcg_naf_mlp, _, _ = model(ECG_NAF_vector[begin_index:end_index].detach(), BCG_NAF_vector[begin_index:end_index].detach())
     # _, _, ecg_af_mlp, bcg_af_mlp, _, _ = model(ECG_AF_vector[begin_index:end_index].detach(), BCG_AF_vector[begin_index:end_index].detach())
 
     only_plot_2D_PCA_one_Figure(model, ECG_AF_vector, BCG_AF_vector, ECG_NAF_vector, BCG_NAF_vector, AF_index_list, NAF_index_list, AF_color_list, NAF_color_list)
+
+    # 430  350
+
+# 绘制指定index的TSNE降维分布图

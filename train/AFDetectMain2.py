@@ -191,7 +191,6 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
     for _ in tqdm(range(epoch)):
         for __, af_data_sample in enumerate(data_loader1, 1):
             for __, naf_data_sample in enumerate(data_loader2, 1):
-                optimizer.zero_grad()
                 loss1, loss2, loss3, loss4, loss5, loss6, loss7 = 0, 0, 0, 0, 0, 0, 0
                 # 16 1 2048  16 1 2048
                 ecg_af_sample, bcg_af_sample = af_data_sample
@@ -216,22 +215,25 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
                 # 尝试添加三元组损失margin  绘制图中最好能够将每一个数据点对应的原片段绘制出来辅助观测是否真的为AF
-                margin = 10
-                loss7 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
+                # margin = 10
+                # loss7 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
 
-                loss1 *= 1.0
-                loss2 *= 100.0
-                loss3 *= 10.0
+                # 先重构提取本质特征  增强模型泛化性  引入非持续性房颤数据（观测是否为线性？）
+
+                loss1 *= 10.0
+                loss2 *= 1.0
+                loss3 *= 100.0
                 loss4 *= 0.0
-                loss5 *= 1.0
-                loss6 *= 1.0
+                loss5 *= 0.01
+                loss6 *= 0.01
                 loss7 *= 10.0
                 print(loss1, loss2, loss3, loss4, loss5, loss6, loss7)
                 loss = loss1 + loss2 + loss3 + loss4 + loss5 + loss6 + loss7
 
                 loss.backward()
                 LossRecord.append(loss.item())
-                optimizer.step()
+            optimizer.step()
+            optimizer.zero_grad()
 
         scheduler.step()
     LossRecord = torch.tensor(LossRecord, device="cpu")

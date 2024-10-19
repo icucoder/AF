@@ -1,5 +1,6 @@
 from utils.PltUtils import *
 import process.ECGRPeakDetect as tkE
+from train.AFDetectMain2 import *
 
 data_root_path = 'H:/iScience/房颤数据/杭州原始数据/'
 
@@ -118,25 +119,81 @@ def get_NAF_DataSet(begin_list, read_length, slidingWindowSize):
     return ECG_vector, BCG_vector, len(ECGPathList), label
 
 
+def get_unknown_NAF_DataSet(begin_list, read_length, slidingWindowSize):
+    ECGPathList = [
+        '001.wangqixiang.20180319.170246.38.ecg.af.csv',
+        '002.zhufurong.20180319.164612.36.ecg.af.csv',
+        '003.chenjinkang.20180319.170514.35.ecg.af.csv',
+        '005.majialin.20180320.173223.35.ecg.af.csv',
+        '006.wangxiangxinbao.20180320.174505.36.ecg.af.csv',
+    ]
+    BCGPathList = [
+        '001.wangqixiang.20180319.170246.38.bcg.af.csv',
+        '002.zhufurong.20180319.164612.36.bcg.af.csv',
+        '003.chenjinkang.20180319.170514.35.bcg.af.csv',
+        '005.majialin.20180320.173223.35.bcg.af.csv',
+        '006.wangxiangxinbao.20180320.174505.36.bcg.af.csv',
+    ]
+
+    for i in range(len(ECGPathList)):
+        ECGPathList[i] = data_root_path + 'ECG_cut/' + ECGPathList[i]
+    for i in range(len(BCGPathList)):
+        BCGPathList[i] = data_root_path + 'BCG/' + BCGPathList[i]
+
+    # begin = 1000
+    # read_length = 10240
+    # slidingWindowSize = 2048
+    ECG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
+    BCG_vector = torch.zeros(0, read_length // slidingWindowSize, slidingWindowSize)
+    for i in range(len(ECGPathList)):
+        ECG = DataUtils.read_torch_from_CSV_data(path=ECGPathList[i], begin=begin_list[i], length=read_length, f=200, column=2)  # 标注采样hz 按时间读数据
+        ECG = DataUtils.butter_bandpass_filter(ECG, 125, 1.0, 40.0)
+        ECG_tmp = DataUtils.get_sliding_window_not_overlap(ECG, slidingWindowSize=slidingWindowSize).unsqueeze(0)
+        ECG_vector = torch.cat([ECG_vector, ECG_tmp], dim=0)
+
+        BCG = DataUtils.read_torch_from_CSV_data(path=BCGPathList[i], begin=begin_list[i], length=read_length, f=125, column=2)
+        BCG = DataUtils.butter_bandpass_filter(BCG, 125, 1.0, 10.4)
+        BCG_tmp = DataUtils.get_sliding_window_not_overlap(BCG, slidingWindowSize=slidingWindowSize).unsqueeze(0)
+        BCG_vector = torch.cat([BCG_vector, BCG_tmp], dim=0)
+
+    label = torch.zeros(ECG_vector.shape[0], 2, dtype=torch.float)
+    onepersonnums = ECG_vector.shape[0] // len(ECGPathList)
+    for i in range(len(ECGPathList)):
+        label[i * onepersonnums:(i + 1) * onepersonnums, 0] = 1  # [1, 0]  NAF
+    ECG_vector = DataUtils.layernorm(ECG_vector)
+    BCG_vector = DataUtils.layernorm(BCG_vector)
+    return ECG_vector, BCG_vector, len(ECGPathList), label
+
+
 def run_Process():
     begin_list1 = [
         275000, 136000, 155900, 60000, 120000, 61000, 20000, 247000, 206000, 121000,
         188000, ]
     begin_list2 = [
-        280000, 60000, 20000, 20000, 20000, 50000, 70000, 20000, 20000, 20000, 40000, 120000, 90000, 180000,
-        110000, 80000, 20000, 20000, 20000, 20000, 20000, 80000, 20000, 20000, 30000, 80000, 20000, 20000, 20000, 45000,
-        50000
+        167100, 60000, 22000, 225000, 60000,
+        320000, 120000, 97000, 60000, 160000,
+        93000, 165000, 103000, 160000, 110000,
+        82000, 54000, 135000, 86000, 30000,
+        10000, 80000, 117000, 101000, 163000,
+        112000, 224000, 98000, 20000, 110000,
+        50000,
+    ]
+    begin_list3 = [
+        435000, 266000, 155900, 160000, 120000,
     ]
     # read_length = 10240
     read_length = 40960
     slidingWindowSize = 2048
-    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin_list1, read_length, slidingWindowSize)
-    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin_list2, read_length, slidingWindowSize)
+    # ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin_list1, read_length, slidingWindowSize)
+    # ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin_list2, read_length, slidingWindowSize)
+    ECG_UNKNOWN_vector, BCG_UNKNOWN_vector, NAF_persons, NAF_label = get_unknown_NAF_DataSet(begin_list3, read_length, slidingWindowSize)
 
-    torch.save(ECG_AF_vector, "../dataset/ECG_AF_vector.pth")
-    torch.save(BCG_AF_vector, "../dataset/BCG_AF_vector.pth")
-    torch.save(ECG_NAF_vector, "../dataset/ECG_NAF_vector.pth")
-    torch.save(BCG_NAF_vector, "../dataset/BCG_NAF_vector.pth")
+    # torch.save(ECG_AF_vector, "../dataset/ECG_AF_vector.pth")
+    # torch.save(BCG_AF_vector, "../dataset/BCG_AF_vector.pth")
+    # torch.save(ECG_NAF_vector, "../dataset/ECG_NAF_vector.pth")
+    # torch.save(BCG_NAF_vector, "../dataset/BCG_NAF_vector.pth")
+    torch.save(ECG_UNKNOWN_vector, "../dataset/ECG_UNKNOWN_vector.pth")
+    torch.save(BCG_UNKNOWN_vector, "../dataset/BCG_UNKNOWN_vector.pth")
     print("数据保存完成")
 
 
@@ -187,7 +244,7 @@ def plot_origin_process_data_by_index(AF_index, NAF_index):
         plt.plot(filterQrsIndex, ecg1[filterQrsIndex], '*')
         plt.ylim(-5, 10)
         plt.subplot(ECG_AF_vector.shape[1], 2, j * 2 + 2)
-        ecg2 = ECG_NAF_vector[AF_index][j].detach()
+        ecg2 = ECG_NAF_vector[NAF_index][j].detach()
         _, _, _, filterQrsIndex = tkE.panTomkinsAlgorithm(ecg2, ecg2, fs=125)
         plt.plot(ECG_NAF_vector[NAF_index][j].detach().numpy())
         plt.plot(filterQrsIndex, ecg2[filterQrsIndex], '*')
@@ -196,12 +253,38 @@ def plot_origin_process_data_by_index(AF_index, NAF_index):
     plt.show()
 
 
-def HRV():
+# 绘制非持续性房颤信号在PCA上的表现
+def plot_PCA_datalist_color_label():
+    ECG_AF_vector = torch.load("../dataset/ECG_AF_vector.pth")
+    BCG_AF_vector = torch.load("../dataset/BCG_AF_vector.pth")
+    ECG_NAF_vector = torch.load("../dataset/ECG_NAF_vector.pth")
+    BCG_NAF_vector = torch.load("../dataset/BCG_NAF_vector.pth")
+    ECG_UNKNOWN_vector = torch.load("../dataset/ECG_UNKNOWN_vector.pth")
+    BCG_UNKNOWN_vector = torch.load("../dataset/BCG_UNKNOWN_vector.pth")
+
+    model = torch.load("../model/ResNetModel.pth").eval()
+
+    _, _, af_mlp, _, _, _ = model(ECG_AF_vector[0:10].detach(), BCG_AF_vector[0:10].detach())
+    _, _, naf_mlp, _, _, _ = model(ECG_NAF_vector[0:10].detach(), BCG_NAF_vector[0:10].detach())
+    _, _, unknown_mlp, _, _, _ = model(ECG_UNKNOWN_vector[0:5].detach(), BCG_UNKNOWN_vector[0:5].detach())
+
+    plot_2D_PCA_Figure_by_data_color_label(
+        data_list=[af_mlp, naf_mlp, unknown_mlp[0:1], unknown_mlp[1:2], unknown_mlp[2:3], unknown_mlp[3:4], unknown_mlp[4:5]],
+        colors=['r', 'g', 'y', '#FFC0CB', '#FFF0F5', '#DB7093', '#DA70D6', '#EE82EE'],
+        label_names=['AF_ECG', 'NAF_ECG', 'UNKNOWN_ECG1', 'UNKNOWN_ECG2', 'UNKNOWN_ECG3', 'UNKNOWN_ECG4', 'UNKNOWN_ECG5'],
+    )
+
+    # plot_2D_PCA_Figure_by_data_color_label(
+    #     data_list=[ECG_AF_vector[0:1], ECG_NAF_vector[0:1], ECG_UNKNOWN_vector[0:1]],
+    #     colors=['r', 'g', 'y'],
+    #     label_names=['AF_ECG', 'NAF_ECG', 'UNKNOWN_ECG'],
+    # )
     return
 
 
 if __name__ == '__main__':
-    run_Process() # 生成源数据集
+    # run_Process()  # 生成源数据集
     # plot_origin_process_data()  # 绘制源数据集
-    # plot_origin_process_data_by_index(AF_index=7, NAF_index=7)
+    # plot_origin_process_data_by_index(AF_index=10, NAF_index=8)
     # SDNN HRV  绘制箱线图
+    plot_PCA_datalist_color_label() # 绘制非持续性房颤信号在PCA上的表现
