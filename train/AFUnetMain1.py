@@ -123,7 +123,7 @@ class MLP(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc = nn.Sequential(
-            nn.Linear(131072, 2048),
+            nn.Linear(2048, 2048),
             nn.LeakyReLU(),
             nn.BatchNorm1d(1),
             nn.Linear(2048, 1024)
@@ -139,6 +139,11 @@ class MLP(nn.Module):
 class ConcatNet(nn.Module):
     def __init__(self):
         super().__init__()
+        self.conv1 = nn.Conv1d(64, 1, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv1d(128, 2, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv1d(256, 4, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv1d(512, 8, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv1d(1024, 16, kernel_size=1, bias=False)
         self.mlp1 = MLP()
         self.mlp2 = MLP()
         self.mlp3 = MLP()
@@ -152,11 +157,11 @@ class ConcatNet(nn.Module):
     #    mid_out.shape: N 1024 length/16
     # return feature.shape: N 1 length/16*31
     def forward(self, down1_conn, down2_conn, down3_conn, down4_conn, mid_out):
-        down1_conn = self.mlp1(down1_conn)
-        down2_conn = self.mlp2(down2_conn)
-        down3_conn = self.mlp3(down3_conn)
-        down4_conn = self.mlp4(down4_conn)
-        mid_out = self.mlp5(mid_out)
+        down1_conn = self.mlp1(self.conv1(down1_conn))
+        down2_conn = self.mlp2(self.conv2(down2_conn))
+        down3_conn = self.mlp3(self.conv3(down3_conn))
+        down4_conn = self.mlp4(self.conv4(down4_conn))
+        mid_out = self.mlp5(self.conv5(mid_out))
         feature = down1_conn + down2_conn + down3_conn + down4_conn + mid_out
         return feature
 
