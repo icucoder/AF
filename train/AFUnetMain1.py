@@ -123,10 +123,10 @@ class MLP(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc = nn.Sequential(
-            nn.Linear(2048, 2048),
+            nn.Linear(2048, 1024),
             nn.LeakyReLU(),
             nn.BatchNorm1d(1),
-            nn.Linear(2048, 1024)
+            nn.Linear(1024, 256)
         )
 
     def flatten_data(self, x):
@@ -158,11 +158,12 @@ class ConcatNet(nn.Module):
     # return feature.shape: N 1 length/16*31
     def forward(self, down1_conn, down2_conn, down3_conn, down4_conn, mid_out):
         down1_conn = self.mlp1(self.conv1(down1_conn))
-        down2_conn = self.mlp2(self.conv2(down2_conn))
-        down3_conn = self.mlp3(self.conv3(down3_conn))
-        down4_conn = self.mlp4(self.conv4(down4_conn))
+        # down2_conn = self.mlp2(self.conv2(down2_conn))
+        # down3_conn = self.mlp3(self.conv3(down3_conn))
+        # down4_conn = self.mlp4(self.conv4(down4_conn))
         mid_out = self.mlp5(self.conv5(mid_out))
-        feature = down1_conn + down2_conn + down3_conn + down4_conn + mid_out
+        # feature = down1_conn + down2_conn + down3_conn + down4_conn + mid_out
+        feature = down1_conn + mid_out
         return feature
 
 
@@ -175,8 +176,10 @@ class EncoderNet(nn.Module):
     def forward(self, x):
         person, nums, length = x.shape
         x = x.reshape(person * nums, 1, length)
+
         reConstruct, down1_conn, down2_conn, down3_conn, down4_conn, mid_out = self.resUnet(x)
         feature = self.concatNet(down1_conn, down2_conn, down3_conn, down4_conn, mid_out)
+
         reConstruct = reConstruct.reshape(person, nums, length)
         feature = feature.reshape(person, nums, feature.shape[-1])
         return reConstruct, feature
@@ -230,13 +233,13 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
                 # 重构
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
-                # 尝试添加三元组损失margin  绘制图中最好能够将每一个数据点对应的原片段绘制出来辅助观测是否真的为AF
-                # margin = 10
-                # loss7 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
+                # 尝试添加三元组损失margin限制特征分布范围  绘制图中最好能够将每一个数据点对应的原片段绘制出来辅助观测是否真的为AF
+                margin = 10
+                loss7 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
 
                 # 先重构提取本质特征  增强模型泛化性  引入非持续性房颤数据（观测是否为线性？）
 
-                loss1 *= 10.0
+                loss1 *= 1.0
                 loss2 *= 1.0
                 loss3 *= 100.0
                 loss4 *= 0.0
@@ -273,7 +276,7 @@ if __name__ == '__main__':
         bcg_af=BCG_AF_vector.data,
         bcg_naf=BCG_NAF_vector.data,
         lr=0.0003,
-        epoch=1000
+        epoch=200
     )
     torch.save(model, "../model/UnitedNetModel.pth")
     print("训练结束，模型保存完成！")
