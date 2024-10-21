@@ -67,7 +67,7 @@ def plot_2D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
     # tsne = TSNE(n_components=2, random_state=42)
     # embedded_data = tsne.fit_transform(all_data.detach().numpy())
     # 应用 PCA 降维到二维空间
-    pca = PCA(n_components=2, random_state=42)
+    pca = PCA(n_components=2, random_state=43)
     embedded_data = pca.fit_transform(all_data.detach().numpy())
 
     # 可视化
@@ -89,16 +89,16 @@ def plot_2D_PCA_one_Figure(data_list):  # 输入数据形状shape：P, N, length
             # embedded_data[length_list[i]:length_list[i + 1], 2],
             c=colors[i], label=label_names[i]
         )
-        for j in range(length_list[i], length_list[i + 1]):
-            ax.text(
-                embedded_data[j][0],
-                embedded_data[j][1],
-                str(j),
-                color=colors[i]
-            )
+        # for j in range(length_list[i], length_list[i + 1]):
+        #     ax.text(
+        #         embedded_data[j][0],
+        #         embedded_data[j][1],
+        #         str(j),
+        #         color=colors[i]
+        #     )
         plt.legend()
 
-    plt.title('t-SNE visualization of different classes')
+    plt.title('PCA visualization of different classes')
     # ax.set_xlabel('Dimension 1')
     # ax.set_ylabel('Dimension 2')
     # ax.set_zlabel('Dimension 3')
@@ -220,7 +220,9 @@ def plot_2D_PCA_Figure_by_data_color_label(data_list, colors, label_names, is_sh
                 )
         plt.legend()
 
-    plt.title('t-SNE visualization of different classes')
+    plt.title('PCA visualization of different classes')
+    plt.xlim(-100, 100)
+    plt.ylim(-100, 100)
     plt.show()
     return
 

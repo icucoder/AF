@@ -96,26 +96,26 @@ class ResUnet(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-    def forward(self, x):
-        down1_conn = self.Encoder1(x)
-        down1 = self.downSample(down1_conn)
+    def forward(self, x): # N 1 2048
+        down1_conn = self.Encoder1(x) # N 64 2048
+        down1 = self.downSample(down1_conn) # N 64 1024
 
-        down2_conn = self.Encoder2(down1)
-        down2 = self.downSample(down2_conn)
+        down2_conn = self.Encoder2(down1) # N 128 1024
+        down2 = self.downSample(down2_conn) # N 128 512
 
-        down3_conn = self.Encoder3(down2)
-        down3 = self.downSample(down3_conn)
+        down3_conn = self.Encoder3(down2) # N 256 512
+        down3 = self.downSample(down3_conn) # N 256 256
 
-        down4_conn = self.Encoder4(down3)
-        down4 = self.downSample(down4_conn)
+        down4_conn = self.Encoder4(down3) # N 512 256
+        down4 = self.downSample(down4_conn) # N 512 128
 
-        mid_out = self.BottleEncoder(down4)
+        mid_out = self.BottleEncoder(down4) # N 1024 128
 
-        up5 = self.Decoder4(torch.cat([down4_conn, self.upSampleBlock4(mid_out)], dim=1))
-        up4 = self.Decoder3(torch.cat([down3_conn, self.upSampleBlock3(up5)], dim=1))
-        up3 = self.Decoder2(torch.cat([down2_conn, self.upSampleBlock2(up4)], dim=1))
-        up2 = self.Decoder1(torch.cat([down1_conn, self.upSampleBlock1(up3)], dim=1))
-        reConstruct = self.toOutput(up2)
+        up5 = self.Decoder4(torch.cat([down4_conn, self.upSampleBlock4(mid_out)], dim=1)) # N 512 256
+        up4 = self.Decoder3(torch.cat([down3_conn, self.upSampleBlock3(up5)], dim=1)) # N 256 512
+        up3 = self.Decoder2(torch.cat([down2_conn, self.upSampleBlock2(up4)], dim=1)) # N 128 1024
+        up2 = self.Decoder1(torch.cat([down1_conn, self.upSampleBlock1(up3)], dim=1)) # N 64 2048
+        reConstruct = self.toOutput(up2) # N 1 2048
         return reConstruct, down1_conn, down2_conn, down3_conn, down4_conn, mid_out
 
 
@@ -140,10 +140,10 @@ class ConcatNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv1d(64, 1, kernel_size=1, bias=False)
-        self.conv1 = nn.Conv1d(128, 2, kernel_size=1, bias=False)
-        self.conv1 = nn.Conv1d(256, 4, kernel_size=1, bias=False)
-        self.conv1 = nn.Conv1d(512, 8, kernel_size=1, bias=False)
-        self.conv1 = nn.Conv1d(1024, 16, kernel_size=1, bias=False)
+        self.conv2 = nn.Conv1d(128, 2, kernel_size=1, bias=False)
+        self.conv3 = nn.Conv1d(256, 4, kernel_size=1, bias=False)
+        self.conv4 = nn.Conv1d(512, 8, kernel_size=1, bias=False)
+        self.conv5 = nn.Conv1d(1024, 16, kernel_size=1, bias=False)
         self.mlp1 = MLP()
         self.mlp2 = MLP()
         self.mlp3 = MLP()
@@ -226,7 +226,7 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
                 # BCG方向与ECG方向对齐
                 loss3 += criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
                 # 按时间对齐提取到的特征
-                loss4 += criterion(ecg_af_mlp, bcg_af_mlp) + criterion(ecg_naf_mlp, bcg_naf_mlp)
+                # loss4 += criterion(ecg_af_mlp, bcg_af_mlp) + criterion(ecg_naf_mlp, bcg_naf_mlp)
                 # 重构
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
                 loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
@@ -273,7 +273,16 @@ if __name__ == '__main__':
         bcg_af=BCG_AF_vector.data,
         bcg_naf=BCG_NAF_vector.data,
         lr=0.0003,
-        epoch=3
+        epoch=1000
     )
     torch.save(model, "../model/UnitedNetModel.pth")
     print("训练结束，模型保存完成！")
+
+    ecg_af_restruct, bcg_af_restruct, ecg_af_mlp, bcg_af_mlp = model(ECG_AF_vector, BCG_AF_vector)
+    ecg_naf_restruct, bcg_naf_restruct, ecg_naf_mlp, bcg_naf_mlp = model(ECG_NAF_vector, BCG_NAF_vector)
+
+    torch.save(ecg_af_mlp, "../output/ecg_af_mlp.pth")
+    torch.save(bcg_af_mlp, "../output/bcg_af_mlp.pth")
+    torch.save(ecg_naf_mlp, "../output/ecg_naf_mlp.pth")
+    torch.save(bcg_naf_mlp, "../output/bcg_naf_mlp.pth")
+    print("结果保存完成！")

@@ -161,7 +161,8 @@ def layernorm(data):
 def continuity_loss(vector_list):  # person num length
     ans = 0
     for vector in vector_list:
-        diff = vector[:, 1:, :] - vector[:, :-1, :]
+        # diff = vector[:, 1:, :] - vector[:, :-1, :]
+        diff = torch.roll(vector, shifts=1, dims=1) - vector
         diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
         ans += torch.sum(diff * diff)
     return ans
