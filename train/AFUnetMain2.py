@@ -204,6 +204,12 @@ class ConcatNet(nn.Module):
         self.mlp3 = MLP(1)
         self.mlp4 = MLP(1)
         self.mlp5 = MLP(1)
+        self.fc_out = nn.Sequential(
+            nn.Linear(128 * 5, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(1),
+            nn.Linear(128, 64),
+        )
 
     # down1_conn.shape: N 64 length
     # down2_conn.shape: N 128 length/2
@@ -212,14 +218,15 @@ class ConcatNet(nn.Module):
     #    mid_out.shape: N 1024 length/16
     # return feature.shape: N 1 length/16*31
     def forward(self, down1_conn, down2_conn, down3_conn, down4_conn, mid_out):
-        down1_conn = self.mlp1(self.conv1(down1_conn))
+        down1_conn = self.mlp1(self.conv1(down1_conn)) # n 1 128
         down2_conn = self.mlp2(self.conv2(down2_conn))
         down3_conn = self.mlp3(self.conv3(down3_conn))
         down4_conn = self.mlp4(self.conv4(down4_conn))
         mid_out = self.mlp5(self.conv5(mid_out))
         # feature = down1_conn + down2_conn + down3_conn + down4_conn + mid_out
         # feature = down1_conn + mid_out
-        feature = torch.cat([down1_conn, down2_conn, down3_conn, down4_conn, mid_out], dim=-1)
+        feature = torch.cat([down1_conn, down2_conn, down3_conn, down4_conn, mid_out], dim=1).transpose(-1, -2).flatten(start_dim=1).unsqueeze(1)
+        feature = self.fc_out(feature)
         return feature
 
 
@@ -252,6 +259,9 @@ class UnitedNet(nn.Module):
         bcg_re, bcg_f = self.encoder2(bcg)
         return ecg_re, bcg_re, ecg_f, bcg_f
 
+def flatten_batch(data):
+    data = data.reshape(data.shape[0] * data.shape[1], 1, data.shape[-1])
+    return data
 
 def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2):
     criterion = nn.MSELoss()
@@ -259,52 +269,55 @@ def train_Encoder(*, model, ecg_af, ecg_naf, bcg_af, bcg_naf, lr=0.001, epoch=2)
     crossloss = nn.BCELoss()
     LossRecord = []
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1.0)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.7)
-    dataset1 = TensorDataset(ecg_af, bcg_af)
-    dataset2 = TensorDataset(ecg_naf, bcg_naf)
-    data_loader1 = DataLoader(dataset=dataset1, batch_size=3, shuffle=True, drop_last=True)
-    data_loader2 = DataLoader(dataset=dataset2, batch_size=3, shuffle=True, drop_last=True)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.7)
+    dataset1 = TensorDataset(flatten_batch(ecg_af), flatten_batch(bcg_af))
+    dataset2 = TensorDataset(flatten_batch(ecg_naf), flatten_batch(bcg_naf))
+    data_loader1 = DataLoader(dataset=dataset1, batch_size=80, shuffle=True)
+    data_loader2 = DataLoader(dataset=dataset2, batch_size=80, shuffle=True)
     for _ in tqdm(range(epoch)):
-        for __, af_data_sample in enumerate(data_loader1, 1):
-            for __, naf_data_sample in enumerate(data_loader2, 1):
+        for __, naf_data_sample in enumerate(data_loader2, 1):
+            for __, af_data_sample in enumerate(data_loader1, 1):
                 loss1, loss2, loss3, loss4, loss5, loss6, loss7 = 0, 0, 0, 0, 0, 0, 0
                 # 16 1 2048  16 1 2048
                 ecg_af_sample, bcg_af_sample = af_data_sample
                 ecg_naf_sample, bcg_naf_sample = naf_data_sample
                 ecg_af_sample = ecg_af_sample.cuda()
                 bcg_af_sample = bcg_af_sample.cuda()
-                random_index = torch.randperm(bcg_naf_sample.shape[1])
-                ecg_naf_sample = ecg_naf_sample[:, random_index, :].cuda()
-                bcg_naf_sample = bcg_naf_sample[:, random_index, :].cuda()
+                ecg_naf_sample = ecg_naf_sample.cuda()
+                bcg_naf_sample = bcg_naf_sample.cuda()
+                # random_index = torch.randperm(bcg_naf_sample.shape[1])
+                # ecg_naf_sample = ecg_naf_sample[:, random_index, :].cuda()
+                # bcg_naf_sample = bcg_naf_sample[:, random_index, :].cuda()
                 # 16 1 256   16 1 256   16 1 256   16 1 256   16 1 2048
                 ecg_af_restruct, bcg_af_restruct, ecg_af_mlp, bcg_af_mlp = model(ecg_af_sample, bcg_af_sample)
                 ecg_naf_restruct, bcg_naf_restruct, ecg_naf_mlp, bcg_naf_mlp = model(ecg_naf_sample, bcg_naf_sample)
                 # 自对齐（连续性）
                 # loss1 += DataUtils.continuity_loss([ecg_af_mlp, bcg_af_mlp, ecg_naf_mlp, bcg_naf_mlp])
-                loss1 += DataUtils.class_continuity_loss(ecg_naf_mlp)
-                loss1 += DataUtils.class_continuity_loss(bcg_naf_mlp)
+                # loss1 += DataUtils.class_continuity_loss(ecg_naf_mlp)
                 # 互对齐
-                loss2 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp) + DataUtils.CLIP_loss(bcg_naf_mlp, bcg_af_mlp)
+                # loss2 += DataUtils.CLIP_loss(ecg_naf_mlp, ecg_af_mlp)
+                # 更换为对比学习实现ECG的分类
+                loss2 += DataUtils.Contrastive_loss(ecg_naf_mlp, ecg_af_mlp)
                 # BCG方向与ECG方向对齐
-                loss3 += criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
+                # loss3 += criterion(DataUtils.CLIP_metric(ecg_naf_mlp, ecg_af_mlp), DataUtils.CLIP_metric(bcg_naf_mlp, bcg_af_mlp))
                 # 按时间对齐提取到的特征
                 # loss4 += criterion(ecg_af_mlp, bcg_af_mlp) + criterion(ecg_naf_mlp, bcg_naf_mlp)
                 # 重构
                 loss5 += criterion(ecg_af_restruct, ecg_af_sample) + criterion(ecg_naf_restruct, ecg_naf_sample)
-                loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
+                # loss6 += criterion(bcg_af_restruct, bcg_af_sample) + criterion(bcg_naf_restruct, bcg_naf_sample)
                 # 尝试添加三元组损失margin限制特征分布范围  绘制图中最好能够将每一个数据点对应的原片段绘制出来辅助观测是否真的为AF
                 # margin = 10
                 # loss7 += DataUtils.MetricLoss(ecg_naf_mlp, ecg_af_mlp, margin) + DataUtils.MetricLoss(bcg_naf_mlp, bcg_af_mlp, margin)
 
                 # 先重构提取本质特征  增强模型泛化性  引入非持续性房颤数据（观测是否为线性？）
 
-                loss1 *= 1.0
+                loss1 *= 0.1
                 loss2 *= 1.0
-                loss3 *= 100.0
+                loss3 *= 1.0
                 loss4 *= 0.0
-                loss5 *= 0.01
-                loss6 *= 0.01
-                loss7 *= 10.0
+                loss5 *= 0.1
+                loss6 *= 0.1
+                loss7 *= 1.0
                 print(loss1, loss2, loss3, loss4, loss5, loss6, loss7)
                 loss = loss1 + loss2 + loss3 + loss4 + loss5 + loss6 + loss7
 
@@ -335,8 +348,8 @@ if __name__ == '__main__':
         ecg_naf=ECG_NAF_vector.data,
         bcg_af=BCG_AF_vector.data,
         bcg_naf=BCG_NAF_vector.data,
-        lr=0.0003,
-        epoch=100
+        lr=0.0005,
+        epoch=20
     )
     torch.save(model, "../model/UnitedNetModel.pth")
     print("训练结束，模型保存完成！等待获取模型运行结果.")

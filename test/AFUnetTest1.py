@@ -23,33 +23,46 @@ def plot_PCA_datalist_color_label():
     # bcg_af_mlp = torch.load("../output/bcg_af_mlp.pth")
     # bcg_naf_mlp = torch.load("../output/bcg_naf_mlp.pth")
 
-    model = torch.load("../model/UnitedNetModel.pth").eval()
-
-
+    # model = torch.load("../model/UnitedNetModel.pth").eval()
+    #
+    #
     # ECG_UNKNOWN_vector = torch.load("../dataset/ECG_UNKNOWN_vector.pth")
     # BCG_UNKNOWN_vector = torch.load("../dataset/BCG_UNKNOWN_vector.pth")
     # _, _, unknown_mlp, _ = model(ECG_UNKNOWN_vector[0:5].detach(), BCG_UNKNOWN_vector[0:5].detach())
 
-    ECG_HUST_vector = torch.load("../dataset/ECG_HUST_vector.pth")
-    BCG_HUST_vector = torch.load("../dataset/BCG_HUST_vector.pth")
-    _, _, hust_mlp, _ = model(ECG_HUST_vector.detach(), BCG_HUST_vector.detach())
-
+    # unknown_mlp = unknown_mlp.detach()
     # plot_2D_PCA_Figure_by_data_color_label(
     #     data_list=[ecg_af_mlp, ecg_naf_mlp, unknown_mlp[0:1], unknown_mlp[1:2], unknown_mlp[2:3], unknown_mlp[3:4], unknown_mlp[4:5]],
     #     colors=['r', 'g', 'y', '#FFC0CB', '#FFF0F5', '#DB7093', '#DA70D6', '#EE82EE'],
     #     label_names=['AF_ECG', 'NAF_ECG', 'UNKNOWN_ECG1', 'UNKNOWN_ECG2', 'UNKNOWN_ECG3', 'UNKNOWN_ECG4', 'UNKNOWN_ECG5'],
+    #     is_show_number=True,
     # )
-
+    # plot_2D_PCA_Figure_by_data_color_label(
+    #     data_list=[ecg_af_mlp[0:1],  ecg_af_mlp[1:2], ecg_af_mlp[2:3], ecg_af_mlp[3:4], ecg_af_mlp[4:5],
+    #                ecg_naf_mlp[0:1],  ecg_naf_mlp[1:2], ecg_naf_mlp[2:3], ecg_naf_mlp[3:4], ecg_naf_mlp[4:5]],
+    #     colors=['r', 'r', 'r', 'r', 'r', 'g', 'g', 'g', 'g', 'g'],
+    #     label_names=['AF_ECG', 'AF_ECG', 'AF_ECG', 'AF_ECG', 'AF_ECG', 'NAF_ECG', 'NAF_ECG', 'NAF_ECG', 'NAF_ECG', 'NAF_ECG', ],
+    # )
     plot_2D_PCA_Figure_by_data_color_label(
-        data_list=[ecg_af_mlp, ecg_naf_mlp, hust_mlp[0:1], hust_mlp[1:2]],
-        # data_list=[ecg_af_mlp, ecg_naf_mlp, ecg_af_mlp, ecg_naf_mlp],
-        colors=['r', 'g', 'y', '#FFC0CB'],
-        label_names=['AF_ECG', 'NAF_ECG', 'UNKNOWN_ECG1', 'UNKNOWN_ECG2'],
+        data_list=[ecg_af_mlp, ecg_naf_mlp],
+        colors=['r', 'g',],
+        label_names=['AF_ECG', 'NAF_ECG', ],
+        is_show_number=True,
     )
+
+    # ECG_HUST_vector = torch.load("../dataset/ECG_HUST_vector.pth")
+    # BCG_HUST_vector = torch.load("../dataset/BCG_HUST_vector.pth")
+    # _, _, hust_mlp, _ = model(ECG_HUST_vector.detach(), BCG_HUST_vector.detach())
+    # plot_2D_PCA_Figure_by_data_color_label(
+    #     data_list=[ecg_af_mlp, ecg_naf_mlp, hust_mlp[0:1], hust_mlp[1:2]],
+    #     # data_list=[ecg_af_mlp, ecg_naf_mlp, ecg_af_mlp, ecg_naf_mlp],
+    #     colors=['r', 'g', 'y', '#FFC0CB'],
+    #     label_names=['AF_ECG', 'NAF_ECG', 'UNKNOWN_ECG1', 'UNKNOWN_ECG2'],
+    # )
     return
 
 
 if __name__ == '__main__':
-    plot_all_train_dataset()
-    # plot_PCA_datalist_color_label()
+    # plot_all_train_dataset()
+    plot_PCA_datalist_color_label()
 

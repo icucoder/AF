@@ -188,11 +188,11 @@ def plot_2D_PCA_Figure_by_data_color_label(data_list, colors, label_names, is_sh
     all_data = torch.cat(processed_data_list, dim=0)
 
     # 应用 t-SNE 降维到二维空间
-    # tsne = TSNE(n_components=2, random_state=42)
-    # embedded_data = tsne.fit_transform(all_data.detach().numpy())
+    tsne = TSNE(n_components=2, random_state=42)
+    embedded_data = tsne.fit_transform(all_data.detach().numpy())
     # 应用 PCA 降维到二维空间
-    pca = PCA(n_components=2, random_state=42)
-    embedded_data = pca.fit_transform(all_data.detach().numpy())
+    # pca = PCA(n_components=2, random_state=42)
+    # embedded_data = pca.fit_transform(all_data.detach().numpy())
 
     # 可视化
     fig = plt.figure()
@@ -208,6 +208,7 @@ def plot_2D_PCA_Figure_by_data_color_label(data_list, colors, label_names, is_sh
         ax.scatter(
             embedded_data[length_list[i]:length_list[i + 1], 0],
             embedded_data[length_list[i]:length_list[i + 1], 1],
+            # embedded_data[length_list[i]:length_list[i + 1], 2],
             c=colors[i], label=label_names[i]
         )
         if is_show_number == True:
@@ -215,6 +216,7 @@ def plot_2D_PCA_Figure_by_data_color_label(data_list, colors, label_names, is_sh
                 ax.text(
                     embedded_data[j][0],
                     embedded_data[j][1],
+                    # embedded_data[j][2],
                     str(j),
                     color=colors[i]
                 )

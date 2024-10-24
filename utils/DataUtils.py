@@ -168,11 +168,27 @@ def continuity_loss(vector_list):  # person num length
     return ans
 
 
+def class_continuity_loss(af_mlp):  # person num length
+    # diff = vector[:, 1:, :] - vector[:, :-1, :]
+    af_mlp = af_mlp.reshape(af_mlp.shape[0] * af_mlp.shape[1], af_mlp.shape[-1])
+    random_index = torch.randperm(af_mlp.shape[0])
+    diff = af_mlp - af_mlp[random_index, :]
+    ans = torch.sum(diff * diff)
+    return ans
+
+
 def CLIP_metric(naf_vector, af_vector):  # p n length
     naf_vector = naf_vector.reshape(naf_vector.shape[0] * naf_vector.shape[1], naf_vector.shape[-1])
     af_vector = af_vector.reshape(af_vector.shape[0] * af_vector.shape[1], af_vector.shape[-1])
+
+    # 广播计算 一一计算
     diff = af_vector.unsqueeze(1) - naf_vector.unsqueeze(0)
     diff = diff.reshape(diff.shape[0] * diff.shape[1], diff.shape[-1])
+
+    # 简易计算 打乱后对位计算
+    # diff = af_vector - naf_vector
+    # diff = diff.reshape(diff.shape[0], diff.shape[-1])
+
     diff = F.normalize(diff, dim=-1)
     return diff
 
@@ -198,6 +214,21 @@ def MetricLoss(naf_vector, af_vector, margin):  # p1 n1 length   p2 n2 length
     relu = nn.ReLU()
     loss = torch.sum(relu(margin - distance))
     return loss
+
+
+def Contrastive_loss(naf_vector, af_vector):  # p n length   后面减去前面
+    naf_vector = naf_vector.reshape(naf_vector.shape[0] * naf_vector.shape[1], naf_vector.shape[-1])
+    af_vector = af_vector.reshape(af_vector.shape[0] * af_vector.shape[1], af_vector.shape[-1])
+
+    ans = 0
+    ans += torch.sum((1 - torch.mm(naf_vector, naf_vector.t())) ** 2)
+    ans += torch.sum((1 - torch.mm(af_vector, af_vector.t())) ** 2)
+    ans += torch.sum((1 + torch.mm(af_vector, naf_vector.t())) ** 2)
+    ans += torch.sum((1 + torch.mm(naf_vector, af_vector.t())) ** 2)
+    # diff = CLIP_metric(naf_vector, af_vector)
+    # ans = 1 - torch.mm(diff, diff.t())  # 两两向量之间的余弦相似度
+    # return torch.sum(ans ** 2)
+    return ans
 
 
 if __name__ == '__main__':

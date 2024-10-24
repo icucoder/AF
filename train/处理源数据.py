@@ -2,7 +2,7 @@ from utils.PltUtils import *
 import process.ECGRPeakDetect as tkE
 from train.AFDetectMain2 import *
 
-data_root_path = 'H:/iScience/房颤数据/杭州原始数据/'
+data_root_path = 'D:/AFData/房颤BCG_ECG/'
 
 
 def get_AF_DataSet(begin_list, read_length, slidingWindowSize):
@@ -13,6 +13,18 @@ def get_AF_DataSet(begin_list, read_length, slidingWindowSize):
         '040.shenlaiying.20180412.184414.38.af.ecg.csv', '043.zhangxiangzhen.20180413.184228.38.af.ecg.csv',
         '047.zhengmeiying.20180416.193001.35.af.ecg.csv', '083.pinalin.20180612.204348.35.af.ecg.csv',
         '091.wanqibao.20180614.205249.35.af.ecg.csv',
+
+        '001.wangqixiang.20180319.170246.38.ecg.af.csv',
+        '002.zhufurong.20180319.164612.36.ecg.af.csv',
+        '003.chenjinkang.20180319.170514.35.ecg.af.csv',
+        '005.majialin.20180320.173223.35.ecg.af.csv',
+        '006.wangxiangxinbao.20180320.174505.36.ecg.af.csv',
+        '014.geyingdi.20180322.172818.37.ecg.af.csv',
+        '033.zhulinshneg.20180411.180159.37.af.ecg.csv',
+        '036.lixianggen.20180411.184517.38.af.ecg.csv',
+        '038.xudabao.20180412.181809.36.af.ecg.csv',
+        '051.luxingzhu.20180417.183210.35.af.ecg.csv',
+        '055.fengxiaozhu.20180418.185749.35.af.ecg.csv',
     ]
     BCGPathList = [
         '004.chengjinqing.20180319.171534.37.bcg.af.csv', '007.songjinming.20180320.174932.37.bcg.af.csv',
@@ -21,6 +33,18 @@ def get_AF_DataSet(begin_list, read_length, slidingWindowSize):
         '040.shenlaiying.20180412.184414.38.af.bcg.csv', '043.zhangxiangzhen.20180413.184228.38.af.bcg.csv',
         '047.zhengmeiying.20180416.193001.35.af.bcg.csv', '083.pinalin.20180612.204348.35.af.bcg.csv',
         '091.wanqibao.20180614.205249.35.af.bcg.csv',
+
+        '001.wangqixiang.20180319.170246.38.bcg.af.csv',
+        '002.zhufurong.20180319.164612.36.bcg.af.csv',
+        '003.chenjinkang.20180319.170514.35.bcg.af.csv',
+        '005.majialin.20180320.173223.35.bcg.af.csv',
+        '006.wangxiangxinbao.20180320.174505.36.bcg.af.csv',
+        '014.geyingdi.20180322.172818.37.bcg.af.csv',
+        '033.zhulinshneg.20180411.180159.37.af.bcg.csv',
+        '036.lixianggen.20180411.184517.38.af.bcg.csv',
+        '038.xudabao.20180412.181809.36.af.bcg.csv',
+        '051.luxingzhu.20180417.183210.35.af.bcg.csv',
+        '055.fengxiaozhu.20180418.185749.35.af.bcg.csv',
     ]
 
     for i in range(len(ECGPathList)):
@@ -121,18 +145,55 @@ def get_NAF_DataSet(begin_list, read_length, slidingWindowSize):
 
 def get_unknown_NAF_DataSet(begin_list, read_length, slidingWindowSize):
     ECGPathList = [
-        '001.wangqixiang.20180319.170246.38.ecg.af.csv',
-        '002.zhufurong.20180319.164612.36.ecg.af.csv',
-        '003.chenjinkang.20180319.170514.35.ecg.af.csv',
-        '005.majialin.20180320.173223.35.ecg.af.csv',
-        '006.wangxiangxinbao.20180320.174505.36.ecg.af.csv',
+        # '001.wangqixiang.20180319.170246.38.ecg.af.csv',
+        # '002.zhufurong.20180319.164612.36.ecg.af.csv',
+        # '003.chenjinkang.20180319.170514.35.ecg.af.csv',
+        # '005.majialin.20180320.173223.35.ecg.af.csv',
+        # '006.wangxiangxinbao.20180320.174505.36.ecg.af.csv',
+        # '014.geyingdi.20180322.172818.37.ecg.af.csv',
+        # '033.zhulinshneg.20180411.180159.37.af.ecg.csv',
+        # '036.lixianggen.20180411.184517.38.af.ecg.csv',
+        # '038.xudabao.20180412.181809.36.af.ecg.csv',
+        # '051.luxingzhu.20180417.183210.35.af.ecg.csv',
+        # '055.fengxiaozhu.20180418.185749.35.af.ecg.csv',
+        '061.wengqibao.20180419.192801.37.af.ecg.csv',
+        '063.wangzhaoguan.20180420.190900.35.af.ecg.csv',
+        '066.zhujialin.20180420.194707.38.af.ecg.csv',
+        '071.wangyixiang.20180423.191124.35.af.ecg.csv',
+        '073.zhuamei.20180423.194306.37.af.ecg.csv',
+        '079.fengxianghua.20180611.185240.36.af.ecg.csv',
+        '080.zhuguohui.20180611.194658.35.af.ecg.csv',
+        '081.tangxiaolin.20180611.194920.37.af.ecg.csv',
+        '082.wangzaifa.20180611.190235.38.af.ecg.csv',
+        '085.meijinzhu.20180612.202232.37.af.ecg.csv',
+        '092.chenrenixing.20180614.205450.36.af.ecg.csv',
+        '093.songguohou.20180614.203948.37.af.ecg.csv',
+
     ]
     BCGPathList = [
-        '001.wangqixiang.20180319.170246.38.bcg.af.csv',
-        '002.zhufurong.20180319.164612.36.bcg.af.csv',
-        '003.chenjinkang.20180319.170514.35.bcg.af.csv',
-        '005.majialin.20180320.173223.35.bcg.af.csv',
-        '006.wangxiangxinbao.20180320.174505.36.bcg.af.csv',
+        # '001.wangqixiang.20180319.170246.38.bcg.af.csv',
+        # '002.zhufurong.20180319.164612.36.bcg.af.csv',
+        # '003.chenjinkang.20180319.170514.35.bcg.af.csv',
+        # '005.majialin.20180320.173223.35.bcg.af.csv',
+        # '006.wangxiangxinbao.20180320.174505.36.bcg.af.csv',
+        # '014.geyingdi.20180322.172818.37.bcg.af.csv',
+        # '033.zhulinshneg.20180411.180159.37.af.bcg.csv',
+        # '036.lixianggen.20180411.184517.38.af.bcg.csv',
+        # '038.xudabao.20180412.181809.36.af.bcg.csv',
+        # '051.luxingzhu.20180417.183210.35.af.bcg.csv',
+        # '055.fengxiaozhu.20180418.185749.35.af.bcg.csv',
+        '061.wengqibao.20180419.192801.37.af.bcg.csv',
+        '063.wangzhaoguan.20180420.190900.35.af.bcg.csv',
+        '066.zhujialin.20180420.194707.38.af.bcg.csv',
+        '071.wangyixiang.20180423.191124.35.af.bcg.csv',
+        '073.zhuamei.20180423.194306.37.af.bcg.csv',
+        '079.fengxianghua.20180611.185240.36.af.bcg.csv',
+        '080.zhuguohui.20180611.194658.35.af.bcg.csv',
+        '081.tangxiaolin.20180611.194920.37.af.bcg.csv',
+        '082.wangzaifa.20180611.190235.38.af.bcg.csv',
+        '085.meijinzhu.20180612.202232.37.af.bcg.csv',
+        '092.chenrenixing.20180614.205450.36.af.bcg.csv',
+        '093.songguohou.20180614.203948.37.af.bcg.csv',
     ]
 
     for i in range(len(ECGPathList)):
@@ -208,7 +269,10 @@ def get_hust_NAF_DataSet(begin_list, read_length, slidingWindowSize):
 def run_Process():
     begin_list1 = [
         275000, 136000, 155900, 60000, 120000, 61000, 20000, 247000, 206000, 121000,
-        188000, ]
+        188000,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0,
+    ]
     begin_list2 = [
         167100, 60000, 22000, 225000, 60000,
         320000, 120000, 97000, 60000, 160000,
@@ -219,7 +283,9 @@ def run_Process():
         50000,
     ]
     begin_list3 = [
-        435000, 266000, 155900, 160000, 120000,
+        # 435000, 266000, 155900, 160000, 120000,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0,
     ]
     begin_list4 = [
         100, 100
@@ -227,19 +293,19 @@ def run_Process():
     # read_length = 10240
     read_length = 40960
     slidingWindowSize = 2048
-    # ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin_list1, read_length, slidingWindowSize)
-    # ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin_list2, read_length, slidingWindowSize)
-    # ECG_UNKNOWN_vector, BCG_UNKNOWN_vector, NAF_persons, NAF_label = get_unknown_NAF_DataSet(begin_list3, read_length, slidingWindowSize)
-    ECG_HUST_vector, BCG_HUST_vector, NAF_persons, NAF_label = get_hust_NAF_DataSet(begin_list4, read_length, slidingWindowSize)
+    ECG_AF_vector, BCG_AF_vector, AF_persons, AF_label = get_AF_DataSet(begin_list1, read_length, slidingWindowSize)
+    ECG_NAF_vector, BCG_NAF_vector, NAF_persons, NAF_label = get_NAF_DataSet(begin_list2, read_length, slidingWindowSize)
+    ECG_UNKNOWN_vector, BCG_UNKNOWN_vector, NAF_persons, NAF_label = get_unknown_NAF_DataSet(begin_list3, read_length, slidingWindowSize)
+    # ECG_HUST_vector, BCG_HUST_vector, NAF_persons, NAF_label = get_hust_NAF_DataSet(begin_list4, read_length, slidingWindowSize)
 
-    # torch.save(ECG_AF_vector, "../dataset/ECG_AF_vector.pth")
-    # torch.save(BCG_AF_vector, "../dataset/BCG_AF_vector.pth")
-    # torch.save(ECG_NAF_vector, "../dataset/ECG_NAF_vector.pth")
-    # torch.save(BCG_NAF_vector, "../dataset/BCG_NAF_vector.pth")
-    # torch.save(ECG_UNKNOWN_vector, "../dataset/ECG_UNKNOWN_vector.pth")
-    # torch.save(BCG_UNKNOWN_vector, "../dataset/BCG_UNKNOWN_vector.pth")
-    torch.save(ECG_HUST_vector, "../dataset/ECG_HUST_vector.pth")
-    torch.save(BCG_HUST_vector, "../dataset/BCG_HUST_vector.pth")
+    torch.save(ECG_AF_vector, "../dataset/ECG_AF_vector.pth")
+    torch.save(BCG_AF_vector, "../dataset/BCG_AF_vector.pth")
+    torch.save(ECG_NAF_vector, "../dataset/ECG_NAF_vector.pth")
+    torch.save(BCG_NAF_vector, "../dataset/BCG_NAF_vector.pth")
+    torch.save(ECG_UNKNOWN_vector, "../dataset/ECG_UNKNOWN_vector.pth")
+    torch.save(BCG_UNKNOWN_vector, "../dataset/BCG_UNKNOWN_vector.pth")
+    # torch.save(ECG_HUST_vector, "../dataset/ECG_HUST_vector.pth")
+    # torch.save(BCG_HUST_vector, "../dataset/BCG_HUST_vector.pth")
     print("数据保存完成")
 
 

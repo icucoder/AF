@@ -1,11 +1,14 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 from utils import DataUtils
 
 if __name__ == '__main__':
 
-    ecg_path = "H:/iScience/房颤数据/杭州原始数据/ECG_cut/"
-    bcg_path = "H:/iScience/房颤数据/杭州原始数据/BCG/"
+    ecg_path = "D:/AFData/房颤BCG_ECG/ECG_cut/"
+    bcg_path = "D:/AFData/房颤BCG_ECG/BCG/"
 
     # ecg_files = os.listdir(ecg_path)
     # bcg_files = os.listdir(bcg_path)
@@ -22,22 +25,46 @@ if __name__ == '__main__':
         # '040.shenlaiying.20180412.184414.38.af.ecg.csv', '043.zhangxiangzhen.20180413.184228.38.af.ecg.csv',
         # '047.zhengmeiying.20180416.193001.35.af.ecg.csv', '083.pinalin.20180612.204348.35.af.ecg.csv',
         # '091.wanqibao.20180614.205249.35.af.ecg.csv',
-        '008.linlaiying.20180320.175323.38.ecg.na.csv', '013.yushuizhen.20180322.172202.36.ecg.na.csv',
-        '016.lijinliang.20180323.164358.36.ecg.na.csv', '017.liaoyinghua.20180323.162433.37.ecg.na.csv',
-        '018.wangruihua.20180323.164452.35.ecg.na.csv', '020.shenwenbao.20180324.174851.35.ecg.na.csv',
-        '021.sunjugen.20180324.181212.37.ecg.na.csv', '022.lincuiguan.20180324.180026.36.ecg.na.csv',
-        '023.wangzhaofa.20180325.175901.35.ecg.na.csv', '024.chengjinfang.20180325.182828.37.ecg.na.csv',
-        '025.chenrenxing.20180325.182125.36.ecg.na.csv', '026.shenying.20180326.181246.36.ecg.na.csv',
-        '028.luamei.20180326.182402.37.ecg.na.csv', '029.shichenhao.20180327.233252.36.ecg.na.csv',
-        '030.zhanghaiqiang.20180328.224655.36.ecg.na.csv', '031.yubin.20180329.191337.36.ecg.na.csv',
-        '045.chensuhua.20180414.180932.35.na.ecg.csv', '046.wujinhua.20180414.185039.37.na.ecg.csv',
-        '049.xiafurong.20180416.200429.37.na.ecg.csv', '053.yaoazhao.20180417.185423.37.na.ecg.csv',
-        '054.xufurong.20180417.190646.38.na.ecg.csv', '056.guyafu.20180418.191454.36.na.ecg.csv',
-        '057.wuhongde.20180418.185107.37.na.ecg.csv', '059.taoshouting.20180419.185644.35.na.ecg.csv',
-        '065.yusanjian.20180420.193147.37.na.ecg.csv', '069.geyongzhi.20180422.195719.37.na.ecg.csv',
-        '070.wuchuanyong.20180422.200924.38.na.ecg.csv', '072.xuliugen.20180423.193038.36.na.ecg.csv',
-        '075.panqijin.20180424.193717.35.na.ecg.csv', '077.wujinyu.20180424.195153.37.na.ecg.csv',
-        '078.yushuigen.20180424.192604.38.na.ecg.csv',
+        # '008.linlaiying.20180320.175323.38.ecg.na.csv', '013.yushuizhen.20180322.172202.36.ecg.na.csv',
+        # '016.lijinliang.20180323.164358.36.ecg.na.csv', '017.liaoyinghua.20180323.162433.37.ecg.na.csv',
+        # '018.wangruihua.20180323.164452.35.ecg.na.csv', '020.shenwenbao.20180324.174851.35.ecg.na.csv',
+        # '021.sunjugen.20180324.181212.37.ecg.na.csv', '022.lincuiguan.20180324.180026.36.ecg.na.csv',
+        # '023.wangzhaofa.20180325.175901.35.ecg.na.csv', '024.chengjinfang.20180325.182828.37.ecg.na.csv',
+        # '025.chenrenxing.20180325.182125.36.ecg.na.csv', '026.shenying.20180326.181246.36.ecg.na.csv',
+        # '028.luamei.20180326.182402.37.ecg.na.csv', '029.shichenhao.20180327.233252.36.ecg.na.csv',
+        # '030.zhanghaiqiang.20180328.224655.36.ecg.na.csv', '031.yubin.20180329.191337.36.ecg.na.csv',
+        # '045.chensuhua.20180414.180932.35.na.ecg.csv', '046.wujinhua.20180414.185039.37.na.ecg.csv',
+        # '049.xiafurong.20180416.200429.37.na.ecg.csv', '053.yaoazhao.20180417.185423.37.na.ecg.csv',
+        # '054.xufurong.20180417.190646.38.na.ecg.csv', '056.guyafu.20180418.191454.36.na.ecg.csv',
+        # '057.wuhongde.20180418.185107.37.na.ecg.csv', '059.taoshouting.20180419.185644.35.na.ecg.csv',
+        # '065.yusanjian.20180420.193147.37.na.ecg.csv', '069.geyongzhi.20180422.195719.37.na.ecg.csv',
+        # '070.wuchuanyong.20180422.200924.38.na.ecg.csv', '072.xuliugen.20180423.193038.36.na.ecg.csv',
+        # '075.panqijin.20180424.193717.35.na.ecg.csv', '077.wujinyu.20180424.195153.37.na.ecg.csv',
+        # '078.yushuigen.20180424.192604.38.na.ecg.csv',
+
+        '001.wangqixiang.20180319.170246.38.ecg.af.csv',
+        '002.zhufurong.20180319.164612.36.ecg.af.csv',
+        '003.chenjinkang.20180319.170514.35.ecg.af.csv',
+        '005.majialin.20180320.173223.35.ecg.af.csv',
+        '006.wangxiangxinbao.20180320.174505.36.ecg.af.csv',
+        '014.geyingdi.20180322.172818.37.ecg.af.csv',
+        '033.zhulinshneg.20180411.180159.37.af.ecg.csv',
+        '036.lixianggen.20180411.184517.38.af.ecg.csv',
+        '038.xudabao.20180412.181809.36.af.ecg.csv',
+        '051.luxingzhu.20180417.183210.35.af.ecg.csv',
+        '055.fengxiaozhu.20180418.185749.35.af.ecg.csv',
+        '061.wengqibao.20180419.192801.37.af.ecg.csv',
+        '063.wangzhaoguan.20180420.190900.35.af.ecg.csv',
+        '066.zhujialin.20180420.194707.38.af.ecg.csv',
+        '071.wangyixiang.20180423.191124.35.af.ecg.csv',
+        '073.zhuamei.20180423.194306.37.af.ecg.csv',
+        '079.fengxianghua.20180611.185240.36.af.ecg.csv',
+        '080.zhuguohui.20180611.194658.35.af.ecg.csv',
+        '081.tangxiaolin.20180611.194920.37.af.ecg.csv',
+        '082.wangzaifa.20180611.190235.38.af.ecg.csv',
+        '085.meijinzhu.20180612.202232.37.af.ecg.csv',
+        '092.chenrenixing.20180614.205450.36.af.ecg.csv',
+        '093.songguohou.20180614.203948.37.af.ecg.csv',
     ]
 
     bcg_files = [
@@ -52,22 +79,46 @@ if __name__ == '__main__':
         # '040.shenlaiying.20180412.184414.38.af.bcg.csv', '043.zhangxiangzhen.20180413.184228.38.af.bcg.csv',
         # '047.zhengmeiying.20180416.193001.35.af.bcg.csv', '083.pinalin.20180612.204348.35.af.bcg.csv',
         # '091.wanqibao.20180614.205249.35.af.bcg.csv',
-        '008.linlaiying.20180320.175323.38.bcg.na.csv', '013.yushuizhen.20180322.172202.36.bcg.na.csv',
-        '016.lijinliang.20180323.164358.36.bcg.na.csv', '017.liaoyinghua.20180323.162433.37.bcg.na.csv',
-        '018.wangruihua.20180323.164452.35.bcg.na.csv', '020.shenwenbao.20180324.174851.35.bcg.na.csv',
-        '021.sunjugen.20180324.181212.37.bcg.na.csv', '022.lincuiguan.20180324.180026.36.bcg.na.csv',
-        '023.wangzhaofa.20180325.175901.35.bcg.na.csv', '024.chengjinfang.20180325.182828.37.bcg.na.csv',
-        '025.chenrenxing.20180325.182125.36.bcg.na.csv', '026.shenying.20180326.181246.36.bcg.na.csv',
-        '028.luamei.20180326.182402.37.bcg.na.csv', '029.shichenhao.20180327.233252.36.bcg.na.csv',
-        '030.zhanghaiqiang.20180328.224655.36.bcg.na.csv', '031.yubin.20180329.191337.36.bcg.na.csv',
-        '045.chensuhua.20180414.180932.35.na.bcg.csv', '046.wujinhua.20180414.185039.37.na.bcg.csv',
-        '049.xiafurong.20180416.200429.37.na.bcg.csv', '053.yaoazhao.20180417.185423.37.na.bcg.csv',
-        '054.xufurong.20180417.190646.38.na.bcg.csv', '056.guyafu.20180418.191454.36.na.bcg.csv',
-        '057.wuhongde.20180418.185107.37.na.bcg.csv', '059.taoshouting.20180419.185644.35.na.bcg.csv',
-        '065.yusanjian.20180420.193147.37.na.bcg.csv', '069.geyongzhi.20180422.195719.37.na.bcg.csv',
-        '070.wuchuanyong.20180422.200924.38.na.bcg.csv', '072.xuliugen.20180423.193038.36.na.bcg.csv',
-        '075.panqijin.20180424.193717.35.na.bcg.csv', '077.wujinyu.20180424.195153.37.na.bcg.csv',
-        '078.yushuigen.20180424.192604.38.na.bcg.csv',
+        # '008.linlaiying.20180320.175323.38.bcg.na.csv', '013.yushuizhen.20180322.172202.36.bcg.na.csv',
+        # '016.lijinliang.20180323.164358.36.bcg.na.csv', '017.liaoyinghua.20180323.162433.37.bcg.na.csv',
+        # '018.wangruihua.20180323.164452.35.bcg.na.csv', '020.shenwenbao.20180324.174851.35.bcg.na.csv',
+        # '021.sunjugen.20180324.181212.37.bcg.na.csv', '022.lincuiguan.20180324.180026.36.bcg.na.csv',
+        # '023.wangzhaofa.20180325.175901.35.bcg.na.csv', '024.chengjinfang.20180325.182828.37.bcg.na.csv',
+        # '025.chenrenxing.20180325.182125.36.bcg.na.csv', '026.shenying.20180326.181246.36.bcg.na.csv',
+        # '028.luamei.20180326.182402.37.bcg.na.csv', '029.shichenhao.20180327.233252.36.bcg.na.csv',
+        # '030.zhanghaiqiang.20180328.224655.36.bcg.na.csv', '031.yubin.20180329.191337.36.bcg.na.csv',
+        # '045.chensuhua.20180414.180932.35.na.bcg.csv', '046.wujinhua.20180414.185039.37.na.bcg.csv',
+        # '049.xiafurong.20180416.200429.37.na.bcg.csv', '053.yaoazhao.20180417.185423.37.na.bcg.csv',
+        # '054.xufurong.20180417.190646.38.na.bcg.csv', '056.guyafu.20180418.191454.36.na.bcg.csv',
+        # '057.wuhongde.20180418.185107.37.na.bcg.csv', '059.taoshouting.20180419.185644.35.na.bcg.csv',
+        # '065.yusanjian.20180420.193147.37.na.bcg.csv', '069.geyongzhi.20180422.195719.37.na.bcg.csv',
+        # '070.wuchuanyong.20180422.200924.38.na.bcg.csv', '072.xuliugen.20180423.193038.36.na.bcg.csv',
+        # '075.panqijin.20180424.193717.35.na.bcg.csv', '077.wujinyu.20180424.195153.37.na.bcg.csv',
+        # '078.yushuigen.20180424.192604.38.na.bcg.csv',
+
+        '001.wangqixiang.20180319.170246.38.bcg.af.csv',
+        '002.zhufurong.20180319.164612.36.bcg.af.csv',
+        '003.chenjinkang.20180319.170514.35.bcg.af.csv',
+        '005.majialin.20180320.173223.35.bcg.af.csv',
+        '006.wangxiangxinbao.20180320.174505.36.bcg.af.csv',
+        '014.geyingdi.20180322.172818.37.bcg.af.csv',
+        '033.zhulinshneg.20180411.180159.37.af.bcg.csv',
+        '036.lixianggen.20180411.184517.38.af.bcg.csv',
+        '038.xudabao.20180412.181809.36.af.bcg.csv',
+        '051.luxingzhu.20180417.183210.35.af.bcg.csv',
+        '055.fengxiaozhu.20180418.185749.35.af.bcg.csv',
+        '061.wengqibao.20180419.192801.37.af.bcg.csv',
+        '063.wangzhaoguan.20180420.190900.35.af.bcg.csv',
+        '066.zhujialin.20180420.194707.38.af.bcg.csv',
+        '071.wangyixiang.20180423.191124.35.af.bcg.csv',
+        '073.zhuamei.20180423.194306.37.af.bcg.csv',
+        '079.fengxianghua.20180611.185240.36.af.bcg.csv',
+        '080.zhuguohui.20180611.194658.35.af.bcg.csv',
+        '081.tangxiaolin.20180611.194920.37.af.bcg.csv',
+        '082.wangzaifa.20180611.190235.38.af.bcg.csv',
+        '085.meijinzhu.20180612.202232.37.af.bcg.csv',
+        '092.chenrenixing.20180614.205450.36.af.bcg.csv',
+        '093.songguohou.20180614.203948.37.af.bcg.csv',
     ]
 
     assert len(ecg_files) == len(bcg_files)
@@ -85,17 +136,23 @@ if __name__ == '__main__':
     begin_list3 = [
         435000, 266000, 155900, 160000, 120000,
     ]
-    read_length = 200000
+    begin_list4 = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0,
+    ]
+    read_length = 4000000
     bias = 239
     for i in range(len(ecg_files)):
-        ECG = DataUtils.read_torch_from_CSV_data(path=ecg_path + ecg_files[i], begin=begin_list2[i], length=read_length, f=200, column=2)  # 标注采样hz 按时间读数据
-        ECG = DataUtils.butter_bandpass_filter(ECG, 125, 1.0, 40.0)
-        BCG = DataUtils.read_torch_from_CSV_data(path=bcg_path + bcg_files[i], begin=begin_list2[i] + bias, length=read_length, f=125, column=2)  # 标注采样hz 按时间读数据
-        BCG = DataUtils.butter_bandpass_filter(BCG, 125, 1.0, 10.4)
+        ECG = DataUtils.read_torch_from_CSV_data(path=ecg_path + ecg_files[i], begin=begin_list4[i], length=read_length, f=200, column=2)  # 标注采样hz 按时间读数据
+        ECG = DataUtils.butter_bandpass_filter(ECG, 125, 1.0, 40.0).squeeze(1)
+        BCG = DataUtils.read_torch_from_CSV_data(path=bcg_path + bcg_files[i], begin=begin_list4[i] + bias, length=read_length, f=125, column=2)  # 标注采样hz 按时间读数据
+        BCG = DataUtils.butter_bandpass_filter(BCG, 125, 1.0, 10.4).squeeze(1)
+        t = np.linspace(0, BCG.shape[0], BCG.shape[0]) / 125.0
         plt.subplot(211)
         plt.title(ecg_files[i])
-        plt.plot(ECG)
+        plt.plot(t, ECG)
         plt.subplot(212)
         plt.title(bcg_files[i])
-        plt.plot(BCG)
+        plt.plot(t, BCG)
         plt.show()
